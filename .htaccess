@@ -1,0 +1,8 @@
+RewriteEngine On
+
+# Ensure request is not for an actual file or directory
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Redirect all other requests to index.php with the URI path as a query parameter
+RewriteRule ^(.*)$ index.php [QSA,L]
