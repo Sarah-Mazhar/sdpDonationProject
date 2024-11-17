@@ -1,0 +1,20 @@
+
+The URLs for the various actions in your updated index.php will be structured based on the action parameter and the type of donation or authentication you're performing.
+
+URL Structure
+Login (Email or Mobile):
+
+To access the login page via email:
+http://localhost/DonationProjecttt/index.php?action=login&login_type=email
+To access the login page via mobile:
+http://localhost/DonationProjecttt/index.php?action=login&login_type=mobile
+Signup:
+
+To access the signup page:
+http://localhost/DonationProjecttt/index.php?action=signup
+Donation:
+
+To donate money (GET request shows the donation form):
+http://localhost/DonationProjecttt/index.php?action=donate&donation_type=money
+To donate food (GET request shows the donation form):
+http://localhost/DonationProjecttt/index.php?action=donate&donation_type=food

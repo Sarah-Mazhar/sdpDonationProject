@@ -1,29 +1,41 @@
 <!-- views/donate_food.php -->
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Food Donation</title>
-</head>
-<body>
-    <h1>Donate Food</h1>
+<?php
+$title = 'Donate Food';
+ob_start();
+?>
+
+<div class="p-4 shadow rounded">
+    <h2 class="text-center mb-4">Contribute Food to Those in Need</h2>
+    <p class="text-center mb-4">Every donation helps feed the hungry. Please select the type of food and quantity you wish to donate.</p>
     <form method="POST" action="/DonationProjecttt/index.php?action=donate&donation_type=food">
-        <label for="foodItem">Food Item:</label>
-        <input type="text" name="foodItem" id="foodItem" required><br>
+        <div class="form-group">
+            <label for="foodItem">Food Item:</label>
+            <input type="text" class="form-control" name="foodItem" id="foodItem" required placeholder="Enter food item">
+        </div>
         
-        <label for="quantity">Quantity:</label>
-        <input type="number" name="quantity" id="quantity" required><br>
+        <div class="form-group">
+            <label for="quantity">Quantity:</label>
+            <input type="number" class="form-control" name="quantity" id="quantity" required placeholder="Enter quantity">
+        </div>
 
-        <label for="extras">Add Extras:</label><br>
-        <input type="checkbox" name="extras[]" value="fruit" id="fruit">
-        <label for="fruit">Add Fruit</label><br>
+        <div class="form-group">
+            <label>Add Extras:</label><br>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="extras[]" value="fruit" id="fruit">
+                <label class="form-check-label" for="fruit">Add Fruit</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="extras[]" value="vegetables" id="vegetables">
+                <label class="form-check-label" for="vegetables">Add Vegetables</label>
+            </div>
+        </div>
 
-        <input type="checkbox" name="extras[]" value="vegetables" id="vegetables">
-        <label for="vegetables">Add Vegetables</label><br>
-
-        <button type="submit">Donate</button>
+        <button type="submit" class="btn btn-primary btn-block mt-3">Donate Food</button>
     </form>
-</body>
-</html>
+</div>
+
+<?php
+$content = ob_get_clean();
+include 'layout.php';
+?>
