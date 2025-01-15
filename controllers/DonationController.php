@@ -1,20 +1,22 @@
 <?php
-// controllers/DonationController.php
-
 require_once __DIR__ . '/../models/donation/DonationFactory.php';
 require_once __DIR__ . '/../models/donation/AddFruit.php';
 require_once __DIR__ . '/../models/donation/AddVegetables.php';
+require_once __DIR__ . '/../models/payment/CashPayment.php';
+require_once __DIR__ . '/../models/payment/VisaPayment.php';
+require_once __DIR__ . '/../models/payment/PaymentContext.php';
 require_once __DIR__ . '/../models/donation/DonationSubject.php';
-require_once __DIR__ .'/../models/payment/CashPayment.php';
-require_once __DIR__ .'/../models/payment/VisaPayment.php';
-require_once __DIR__ .'/../models/payment/PaymentContext.php';
 require_once __DIR__ . '/../models/observers/EmailObserver.php';
 require_once __DIR__ . '/../models/observers/NotificationObserver.php';
 require_once __DIR__ . '/../models/observers/LogObserver.php';
+require_once __DIR__ . '/../models/donation/ProtectiveDonationProxy.php';
+
+require_once __DIR__ . '/../models/donation/DonationAdminInterface.php';
+require_once __DIR__ . '/../models/donation/RealDonationAdmin.php';
 
 class DonationController {
-
     private $donationSubject;
+    private $donationAdmin;
 
     public function __construct() {
         // Initialize the subject and attach observers
@@ -22,6 +24,12 @@ class DonationController {
         $this->donationSubject->attach(new EmailObserver());
         $this->donationSubject->attach(new NotificationObserver());
         $this->donationSubject->attach(new LogObserver());
+
+        // Determine user role (fetch from session)
+        $userRole = $_SESSION['user_role'] ?? 'guest';
+
+        // Initialize the proxy for donation administration
+        $this->donationAdmin = new ProtectiveDonationProxy($userRole);
     }
 
     // Handle Money Donations
@@ -33,10 +41,17 @@ class DonationController {
             return;
         }
 
+        $amount = floatval($amount);
+        if ($amount <= 0) {
+            echo "Invalid donation amount.";
+            return;
+        }
+
         $donationFactory = new DonationFactory();
         $moneyDonation = $donationFactory->createDonation('money');
 
-        // Select the appropriate payment strategy based on the payment method
+        // Select the appropriate payment strategy
+        $paymentStrategy = null;
         if ($paymentMethod === 'cash') {
             $paymentStrategy = new CashPayment();
         } elseif ($paymentMethod === 'visa') {
@@ -46,7 +61,7 @@ class DonationController {
             return;
         }
 
-        // Create a PaymentContext and execute the payment
+        // Execute the payment
         $paymentContext = new PaymentContext($paymentStrategy);
         $result = $paymentContext->executePayment($amount);
 
@@ -55,14 +70,15 @@ class DonationController {
             $moneyDonation->donate($userId, $amount);
             echo "Money donation of {$amount} processed successfully! {$result['message']} \n";
 
-            // Notify all observers about the successful money donation
+            // Notify observers
             $this->donationSubject->notifyObservers([
                 'userId' => $userId,
                 'amountOrItem' => $amount,
-                'type' => 'money'
+                'type' => 'money',
+                'status' => 'success'
             ]);
         } else {
-            echo "Money donation of {$amount} failed";
+            echo "Money donation failed: {$result['message']}";
         }
     }
 
@@ -75,11 +91,17 @@ class DonationController {
             return;
         }
 
+        $quantity = intval($quantity);
+        if ($quantity <= 0 || empty($foodItem)) {
+            echo "Invalid food item or quantity.";
+            return;
+        }
+
         $donationFactory = new DonationFactory();
         $foodDonation = $donationFactory->createDonation('food');
         $foodDonation->addItem($foodItem, $quantity);
 
-        // Apply decorators based on selected extras
+        // Apply extras
         if (in_array('fruit', $extras)) {
             $fruitDecorator = new AddFruit($foodDonation);
             $fruitDecorator->addItemToDonation();
@@ -89,16 +111,35 @@ class DonationController {
             $vegetablesDecorator->addItemToDonation();
         }
 
-        // Save all accumulated items in one go
+        // Save donation
         $foodDonation->donate($userId);
-        echo "Food donation processed successfully! \n";
+        echo "Food donation processed successfully!";
 
-        // Notify all observers about the successful food donation
+        // Notify observers
         $this->donationSubject->notifyObservers([
             'userId' => $userId,
             'amountOrItem' => "{$quantity} {$foodItem}" . (empty($extras) ? '' : ' with extras: ' . implode(', ', $extras)),
-            'type' => 'food'
+            'type' => 'food',
+            'status' => 'success'
         ]);
+    }
+
+    // View Donations (Admin-only)
+    public function viewDonations() {
+        if ($_SESSION['user_type'] === 'donation_admin' || $_SESSION['user_type'] === 'super_admin') {
+            $this->donationAdmin->viewDonations();
+        } else {
+            echo "Access denied: You are not authorized to view donations.";
+        }
+    }
+
+    // Delete a Donation (Admin-only)
+    public function deleteDonation($donationId) {
+        if ($_SESSION['user_type'] === 'donation_admin' || $_SESSION['user_type'] === 'super_admin') {
+            $this->donationAdmin->deleteDonation($donationId);
+        } else {
+            echo "Access denied: You are not authorized to delete donations.";
+        }
     }
 }
 ?>

@@ -2,85 +2,93 @@
 // index.php
 
 session_start();
+
+// Enable error reporting for debugging (optional, remove in production)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Include required files
 require_once __DIR__ . '/config/Database.php';
 require_once __DIR__ . '/controllers/AuthController.php';
 require_once __DIR__ . '/controllers/DonationController.php';
 
-$action = isset($_GET['action']) ? $_GET['action'] : null;
+// Initialize controllers
 $authController = new AuthController();
 $donationController = new DonationController();
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // Handle GET requests (display forms)
-    if ($action === 'login' && isset($_GET['login_type'])) {
-        if ($_GET['login_type'] === 'email') {
-            // Render Email Login form
-            include 'views/login.php';
-        } elseif ($_GET['login_type'] === 'mobile') {
-            // Render Mobile Login form
-            include 'views/login_mobile.php';
-        }
-    } elseif ($action === 'signup') {
-        // Render Signup form
-        include 'views/signup.php';
-    } elseif ($action === 'donate' && isset($_GET['donation_type'])) {
-        if ($_GET['donation_type'] === 'money') {
-            // Render Money Donation form
-            include 'views/donate_money.php';
-        } elseif ($_GET['donation_type'] === 'food') {
-            // Render Food Donation form
-            include 'views/donate_food.php';
-        }
-    } else {
-        // Default page or invalid action
-        echo "Invalid or no action specified.";
-    }
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Handle POST requests (process login, signup, or donations)
+// Get the action and method
+$action = $_GET['action'] ?? null;
+$method = $_SERVER['REQUEST_METHOD'];
 
-    // Login for Email
-    if ($action === 'login' && isset($_GET['login_type']) && $_GET['login_type'] === 'email') {
-        if (isset($_POST['email']) && isset($_POST['password'])) {
-            $authController->login($_POST['email'], $_POST['password'], 'email');
-        } else {
-            echo "Invalid email or password.";
-        }
+// Handle GET requests
+if ($method === 'GET') {
+    switch ($action) {
+        case 'login':
+            if (isset($_GET['login_type'])) {
+                if ($_GET['login_type'] === 'email') {
+                    include 'views/login.php';
+                } elseif ($_GET['login_type'] === 'mobile') {
+                    include 'views/login_mobile.php';
+                } else {
+                    echo "Invalid login type.";
+                }
+            }
+            break;
+        case 'signup':
+            include 'views/signup.php';
+            break;
+        case 'donate':
+            if (isset($_GET['donation_type'])) {
+                if ($_GET['donation_type'] === 'money') {
+                    include 'views/donate_money.php';
+                } elseif ($_GET['donation_type'] === 'food') {
+                    include 'views/donate_food.php';
+                } else {
+                    echo "Invalid donation type.";
+                }
+            }
+            break;
+        default:
+            echo "Invalid or no action specified.";
     }
-    // Login for Mobile
-    elseif ($action === 'login' && isset($_GET['login_type']) && $_GET['login_type'] === 'mobile') {
-        if (isset($_POST['mobile']) && isset($_POST['password'])) {
-            $authController->login($_POST['mobile'], $_POST['password'], 'mobile');
-        } else {
-            echo "Invalid mobile number or password.";
-        }
-    }
-    // Sign Up
-    elseif ($action === 'signup') {
-        if (isset($_POST['email']) && isset($_POST['password']) && isset($_POST['mobile'])) {
-            $authController->signup($_POST['email'], $_POST['password'], $_POST['mobile']);
-        } else {
-            echo "Please fill in all fields.";
-        }
-    }
-    // Money Donation
-    elseif ($action === 'donate' && isset($_GET['donation_type']) && $_GET['donation_type'] === 'money') {
-        if (isset($_POST['amount'])) {
-            $donationController->donateMoney($_POST['amount'], $_POST['payment_method']);
-        } else {
-            echo "Please enter a donation amount.";
-        }
-    }
-    // Food Donation with Extras
-    elseif ($action === 'donate' && isset($_GET['donation_type']) && $_GET['donation_type'] === 'food') {
-        if (isset($_POST['foodItem']) && isset($_POST['quantity'])) {
-            // Retrieve extras as an array, if selected
-            $extras = isset($_POST['extras']) ? $_POST['extras'] : [];
-            $donationController->donateFood($_POST['foodItem'], $_POST['quantity'], $extras);
-        } else {
-            echo "Please enter valid food item and quantity.";
-        }
-    } else {
-        echo "Invalid request.";
+}
+
+// Handle POST requests
+elseif ($method === 'POST') {
+    switch ($action) {
+        case 'login':
+            if (isset($_GET['login_type'])) {
+                if ($_GET['login_type'] === 'email' && isset($_POST['email'], $_POST['password'])) {
+                    $authController->login($_POST['email'], $_POST['password'], 'email');
+                } elseif ($_GET['login_type'] === 'mobile' && isset($_POST['mobile'], $_POST['password'])) {
+                    $authController->login($_POST['mobile'], $_POST['password'], 'mobile');
+                } else {
+                    echo "Invalid login credentials.";
+                }
+            }
+            break;
+        case 'signup':
+            if (isset($_POST['email'], $_POST['password'], $_POST['mobile'])) {
+                $authController->signup($_POST['email'], $_POST['password'], $_POST['mobile']);
+            } else {
+                echo "Please fill in all fields.";
+            }
+            break;
+        case 'donate':
+            if (isset($_GET['donation_type'])) {
+                if ($_GET['donation_type'] === 'money' && isset($_POST['amount'], $_POST['payment_method'])) {
+                    $donationController->donateMoney($_POST['amount'], $_POST['payment_method']);
+                } elseif ($_GET['donation_type'] === 'food' && isset($_POST['foodItem'], $_POST['quantity'])) {
+                    $extras = $_POST['extras'] ?? [];
+                    $donationController->donateFood($_POST['foodItem'], $_POST['quantity'], $extras);
+                } else {
+                    echo "Invalid donation input.";
+                }
+            }
+            break;
+        default:
+            echo "Invalid request.";
     }
 } else {
     echo "Invalid request method.";

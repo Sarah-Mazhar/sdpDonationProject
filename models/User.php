@@ -44,5 +44,26 @@ class User {
 
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    public function getUsersGroupedByType($includeSuperAdmin = false) {
+        $condition = $includeSuperAdmin ? "" : "WHERE type != 'super_admin'";
+        $sql = "
+            SELECT id, email, type
+            FROM " . $this->table . "
+            $condition
+            ORDER BY FIELD(type, 'donation_admin', 'payment_admin', 'user'), email
+        ";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $groupedUsers = [];
+        foreach ($result as $user) {
+            $groupedUsers[$user['type']][] = $user;
+        }
+
+        return $groupedUsers;
+    }
 }
 ?>
