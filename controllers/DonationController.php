@@ -1,72 +1,91 @@
 <?php
-// controllers/DonationController.php
+namespace Controllers;
 
-require_once __DIR__ . '/../models/donation/DonationFactory.php';
-require_once __DIR__ . '/../models/donation/AddFruit.php';
-require_once __DIR__ . '/../models/donation/AddVegetables.php';
+// Include the required files for your project
 require_once __DIR__ . '/../models/donation/DonationSubject.php';
-require_once __DIR__ .'/../models/payment/CashPayment.php';
-require_once __DIR__ .'/../models/payment/VisaPayment.php';
-require_once __DIR__ .'/../models/payment/PaymentContext.php';
 require_once __DIR__ . '/../models/observers/EmailObserver.php';
 require_once __DIR__ . '/../models/observers/NotificationObserver.php';
 require_once __DIR__ . '/../models/observers/LogObserver.php';
+require_once __DIR__ . '/../models/donation/States/PendingState.php';
+require_once __DIR__ . '/../models/donation/States/ProcessingState.php';
+require_once __DIR__ . '/../models/donation/States/CompletedState.php';
+require_once __DIR__ . '/../models/donation/States/FailedState.php';
 
 class DonationController {
 
     private $donationSubject;
+    private $currentState;
 
     public function __construct() {
-        // Initialize the subject and attach observers
-        $this->donationSubject = new DonationSubject();
-        $this->donationSubject->attach(new EmailObserver());
-        $this->donationSubject->attach(new NotificationObserver());
-        $this->donationSubject->attach(new LogObserver());
+        // Initialize DonationSubject
+        $this->donationSubject = new \DonationSubject();
+        $this->donationSubject->attach(new \EmailObserver());
+        $this->donationSubject->attach(new \NotificationObserver());
+        $this->donationSubject->attach(new \LogObserver());
+
+        // Set the initial state
+        $this->currentState = new \Models\Donation\States\PendingState();
+
     }
 
-    // Handle Money Donations
+    public function changeState($newState) {
+        $this->currentState = $newState;
+    }
+
+    public function process() {
+        $this->currentState->process($this);
+    }
+
+    public function pay() {
+        $this->currentState->pay($this);
+    }
+
+    public function fail() {
+        $this->currentState->fail($this);
+    }
+
+    public function complete() {
+        $this->currentState->complete($this);
+    }
+
     public function donateMoney($amount, $paymentMethod) {
-        $userId = $_SESSION['user_id'] ?? null;  // Get user ID from session
+        $userId = $_SESSION['user_id'] ?? null;
 
         if (!$userId) {
             echo "Please log in to donate.";
             return;
         }
 
-        $donationFactory = new DonationFactory();
+        $donationFactory = new \DonationFactory();
         $moneyDonation = $donationFactory->createDonation('money');
 
-        // Select the appropriate payment strategy based on the payment method
-        if ($paymentMethod === 'cash') {
-            $paymentStrategy = new CashPayment();
-        } elseif ($paymentMethod === 'visa') {
-            $paymentStrategy = new VisaPayment();
-        } else {
+        $paymentStrategy = $paymentMethod === 'cash' ? new \CashPayment() :
+                          ($paymentMethod === 'visa' ? new \VisaPayment() : null);
+
+        if (!$paymentStrategy) {
             echo "Invalid payment method.";
             return;
         }
 
-        // Create a PaymentContext and execute the payment
-        $paymentContext = new PaymentContext($paymentStrategy);
+        $paymentContext = new \PaymentContext($paymentStrategy);
         $result = $paymentContext->executePayment($amount);
 
         if ($result['status']) {
-            // Process the donation
+            $this->process();
             $moneyDonation->donate($userId, $amount);
             echo "Money donation of {$amount} processed successfully! {$result['message']} \n";
-
-            // Notify all observers about the successful money donation
+            $this->complete();
             $this->donationSubject->notifyObservers([
                 'userId' => $userId,
                 'amountOrItem' => $amount,
                 'type' => 'money'
             ]);
         } else {
-            echo "Money donation of {$amount} failed";
+            $this->fail();
+            echo "Money donation of {$amount} failed.";
         }
     }
 
-    // Handle Food Donations
     public function donateFood($foodItem, $quantity, $extras = []) {
         $userId = $_SESSION['user_id'] ?? null;
 
@@ -75,25 +94,23 @@ class DonationController {
             return;
         }
 
-        $donationFactory = new DonationFactory();
+        $donationFactory = new \DonationFactory();
         $foodDonation = $donationFactory->createDonation('food');
         $foodDonation->addItem($foodItem, $quantity);
 
-        // Apply decorators based on selected extras
         if (in_array('fruit', $extras)) {
-            $fruitDecorator = new AddFruit($foodDonation);
+            $fruitDecorator = new \AddFruit($foodDonation);
             $fruitDecorator->addItemToDonation();
         }
         if (in_array('vegetables', $extras)) {
-            $vegetablesDecorator = new AddVegetables($foodDonation);
+            $vegetablesDecorator = new \AddVegetables($foodDonation);
             $vegetablesDecorator->addItemToDonation();
         }
 
-        // Save all accumulated items in one go
+        $this->process();
         $foodDonation->donate($userId);
         echo "Food donation processed successfully! \n";
-
-        // Notify all observers about the successful food donation
+        $this->complete();
         $this->donationSubject->notifyObservers([
             'userId' => $userId,
             'amountOrItem' => "{$quantity} {$foodItem}" . (empty($extras) ? '' : ' with extras: ' . implode(', ', $extras)),

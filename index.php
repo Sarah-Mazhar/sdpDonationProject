@@ -2,9 +2,12 @@
 // index.php
 
 session_start();
-require_once __DIR__ . '/config/Database.php';
-require_once __DIR__ . '/controllers/AuthController.php';
-require_once __DIR__ . '/controllers/DonationController.php';
+
+require_once __DIR__ . '/manual_loader.php';
+
+// require_once __DIR__ . '/config/Database.php';
+// require_once __DIR__ . '/controllers/AuthController.php';
+// require_once __DIR__ . '/controllers/DonationController.php';
 
 $action = isset($_GET['action']) ? $_GET['action'] : null;
 $authController = new AuthController();
