@@ -65,5 +65,21 @@ class User {
 
         return $groupedUsers;
     }
+
+    public function updateUserRole($userId, $newRole) {
+        // Check if role is valid
+        $validRoles = ['user', 'donation_admin', 'payment_admin', 'super_admin'];
+        if (!in_array($newRole, $validRoles)) {
+            return false; // Invalid role
+        }
+
+        $sql = "UPDATE " . $this->table . " SET type = :type WHERE id = :id";
+        $stmt = $this->conn->prepare($sql);
+
+        $stmt->bindParam(':type', $newRole);
+        $stmt->bindParam(':id', $userId);
+
+        return $stmt->execute();
+    }
 }
 ?>

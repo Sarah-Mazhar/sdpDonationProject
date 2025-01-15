@@ -29,5 +29,8 @@ class FoodDonation implements DonationI {
             $stmt->bindParam(':user_id', $userId);
             $stmt->execute();
         }
+
+        // Clear the items after the donation process is completed
+        $this->items = [];
     }
 }

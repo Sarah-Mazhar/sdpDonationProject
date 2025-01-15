@@ -82,47 +82,49 @@ class DonationController {
         }
     }
 
-    // Handle Food Donations
-    public function donateFood($foodItem, $quantity, $extras = []) {
-        $userId = $_SESSION['user_id'] ?? null;
 
-        if (!$userId) {
-            echo "Please log in to donate.";
-            return;
-        }
+// Handle Food Donations
+public function donateFood($foodItem, $quantity, $extras = []) {
+    $userId = $_SESSION['user_id'] ?? null;
 
-        $quantity = intval($quantity);
-        if ($quantity <= 0 || empty($foodItem)) {
-            echo "Invalid food item or quantity.";
-            return;
-        }
-
-        $donationFactory = new DonationFactory();
-        $foodDonation = $donationFactory->createDonation('food');
-        $foodDonation->addItem($foodItem, $quantity);
-
-        // Apply extras
-        if (in_array('fruit', $extras)) {
-            $fruitDecorator = new AddFruit($foodDonation);
-            $fruitDecorator->addItemToDonation();
-        }
-        if (in_array('vegetables', $extras)) {
-            $vegetablesDecorator = new AddVegetables($foodDonation);
-            $vegetablesDecorator->addItemToDonation();
-        }
-
-        // Save donation
-        $foodDonation->donate($userId);
-        echo "Food donation processed successfully!";
-
-        // Notify observers
-        $this->donationSubject->notifyObservers([
-            'userId' => $userId,
-            'amountOrItem' => "{$quantity} {$foodItem}" . (empty($extras) ? '' : ' with extras: ' . implode(', ', $extras)),
-            'type' => 'food',
-            'status' => 'success'
-        ]);
+    if (!$userId) {
+        echo "Please log in to donate.";
+        return;
     }
+
+    $quantity = intval($quantity);
+    if ($quantity <= 0 || empty($foodItem)) {
+        echo "Invalid food item or quantity.";
+        return;
+    }
+
+    $donationFactory = new DonationFactory();
+    $foodDonation = $donationFactory->createDonation('food');
+    $foodDonation->addItem($foodItem, $quantity);
+
+    // Apply extras
+    if (in_array('fruit', $extras)) {
+        $fruitDecorator = new AddFruit($foodDonation);
+        $fruitDecorator->addItemToDonation();
+    }
+    if (in_array('vegetables', $extras)) {
+        $vegetablesDecorator = new AddVegetables($foodDonation);
+        $vegetablesDecorator->addItemToDonation();
+    }
+
+    // Save donation
+$foodDonation->donate(userId: $userId);
+
+// Notify observers
+$this->donationSubject->notifyObservers([
+    'userId' => $userId,
+    'amountOrItem' => "{$quantity} {$foodItem}" . (empty($extras) ? '' : ' with extras: ' . implode(', ', $extras)),
+    'type' => 'food',
+    'status' => 'success'
+]);
+
+}
+
 
     // View Donations (Admin-only)
     public function viewDonations() {
