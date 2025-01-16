@@ -2,6 +2,8 @@
 namespace Models\Donation\States;
 
 use Controllers\DonationController;
+// Include the DonationState interface
+require_once __DIR__ . '/DonationState.php';
 
 class FailedState implements DonationState {
     public function process(DonationController $context) {

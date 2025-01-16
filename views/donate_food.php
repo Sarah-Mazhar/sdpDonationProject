@@ -1,5 +1,3 @@
-<!-- views/donate_food.php -->
-
 <?php
 $title = 'Donate Food';
 ob_start();
@@ -20,7 +18,7 @@ ob_start();
         </div>
 
         <div class="form-group">
-            <label>Add Extras:</label><br>
+            <label>Add Extras to the box:</label><br>
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" name="extras[]" value="fruit" id="fruit">
                 <label class="form-check-label" for="fruit">Add Fruit</label>
@@ -33,6 +31,14 @@ ob_start();
 
         <button type="submit" class="btn btn-primary btn-block mt-3">Donate Food</button>
     </form>
+
+    <h3 class="mt-5">Donation State:</h3>
+    <ul>
+        <?php foreach ($donationStates as $state): ?>
+            <li><?php echo $state; ?></li>
+        <?php endforeach; ?>
+    </ul>
+
 </div>
 
 <?php

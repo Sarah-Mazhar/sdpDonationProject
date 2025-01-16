@@ -3,23 +3,25 @@ namespace Models\Donation\States;
 
 use Controllers\DonationController;
 
+// Include the DonationState interface
+require_once __DIR__ . '/DonationState.php';
+
 class ProcessingState implements DonationState {
+
     public function process(DonationController $context) {
-        echo "Already in processing state.\n";
+        echo "Cannot process. Donation is already in the processing state.\n";
     }
 
     public function pay(DonationController $context) {
-        echo "Payment completed successfully. Moving to completed state.\n";
-        $context->changeState(new CompletedState());
+        echo "Cannot pay directly. Donation is still being processed.\n";
     }
 
     public function fail(DonationController $context) {
-        echo "Processing failed. Moving to failed state.\n";
-        $context->changeState(new FailedState());
+        echo "Cannot fail directly. Donation is still being processed.\n";
     }
 
     public function complete(DonationController $context) {
-        echo "Cannot complete directly from processing. Payment required.\n";
+        echo "Cannot complete directly. Donation is still being processed.\n";
     }
 }
 ?>

@@ -1,5 +1,3 @@
-<!-- views/donate_money.php -->
-
 <?php
 $title = 'Donate Money';
 ob_start();
@@ -24,6 +22,14 @@ ob_start();
 
         <button type="submit" class="btn btn-primary btn-block mt-3">Donate Now</button>
     </form>
+
+    <h3 class="mt-5"><i>Donation State:</i></h3>
+    <ul>
+        <?php foreach ($donationStates as $state): ?>
+            <li><?php echo $state; ?></li>
+        <?php endforeach; ?>
+    </ul>
+
 </div>
 
 <?php

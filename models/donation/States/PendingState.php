@@ -3,23 +3,25 @@ namespace Models\Donation\States;
 
 use Controllers\DonationController;
 
+// Include the DonationState interface
+require_once __DIR__ . '/DonationState.php';
+
 class PendingState implements DonationState {
+
     public function process(DonationController $context) {
-        echo "Processing donation...\n";
-        $context->changeState(new ProcessingState());
+        echo "Cannot process. Donation is already in the pending state.\n";
     }
 
     public function pay(DonationController $context) {
-        echo "Cannot pay in pending state.\n";
+        echo "Cannot pay. Donation is still in the pending state.\n";
     }
 
     public function fail(DonationController $context) {
-        echo "Donation failed.\n";
-        $context->changeState(new FailedState());
+        echo "Cannot fail directly. Donation is still in the pending state.\n";
     }
 
     public function complete(DonationController $context) {
-        echo "Cannot complete in pending state.\n";
+        echo "Cannot complete directly. Donation is still in the pending state.\n";
     }
 }
 ?>
