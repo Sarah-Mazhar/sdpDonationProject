@@ -6,22 +6,11 @@ require_once __DIR__ . '/../config/Database.php';
 $database = Database::getInstance();
 $conn = $database->getConnection();
 
-// Fetch all events for each month
-$query = "SELECT * FROM events ORDER BY MONTH(STR_TO_DATE(month, '%M'))";
+// Fetch all events ordered by ID
+$query = "SELECT * FROM events ORDER BY id ASC";
 $stmt = $conn->prepare($query);
 $stmt->execute();
 $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Group events by month
-$groupedEvents = [];
-foreach ($events as $event) {
-    $groupedEvents[$event['month']][] = $event;
-}
-
-$months = [
-    'January', 'February', 'March', 'April', 'May', 'June', 'July', 
-    'August', 'September', 'October', 'November', 'December'
-];
 ?>
 
 <!DOCTYPE html>
@@ -52,52 +41,63 @@ $months = [
         }
 
         .events-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
+            max-width: 800px;
+            margin: 30px auto;
+            background: white;
             padding: 20px;
-            justify-items: center;
-        }
-
-        .month-card {
-            background-color: #ffffff;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 15px;
-            text-align: center;
-            width: 250px;
-            transition: transform 0.3s ease-in-out;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
-        .month-card:hover {
-            transform: scale(1.05);
+        .event {
+            padding: 10px 0;
+            border-bottom: 1px solid #ccc;
         }
 
-        .month-title {
-            font-size: 1.5em;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .event-list {
-            margin-top: 10px;
+        .event:last-child {
+            border-bottom: none;
         }
 
         .event-title {
+            font-size: 1.2em;
             font-weight: bold;
             color: #4CAF50;
-            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .event-title:hover {
+            text-decoration: underline;
         }
 
         .event-description {
             font-size: 0.9em;
             color: #555;
-            margin-bottom: 10px;
+            margin: 5px 0;
         }
 
         .event-date {
             font-size: 0.8em;
             color: #888;
+        }
+
+        .add-event-container {
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        .add-event-link {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1.2em;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        .add-event-link:hover {
+            background-color: #45a049;
         }
 
         footer {
@@ -111,39 +111,36 @@ $months = [
 </head>
 <body>
 
-    <header>
-        <h1>All Charity Events</h1>
-    </header>
+<header>
+    <h1>All Charity Events</h1>
+</header>
 
-    <main>
-        <div class="events-container">
-            <?php foreach ($months as $month): ?>
-                <div class="month-card">
-                    <h2 class="month-title"><?php echo htmlspecialchars($month); ?></h2>
-                    <div class="event-list">
-                        <?php if (isset($groupedEvents[$month])): ?>
-                            <?php foreach ($groupedEvents[$month] as $event): ?>
-                                <div class="event">
-                                    <!-- Link each event title to the event details page -->
-                                    <a href="events_details.php?id=<?php echo $event['id']; ?>" class="event-title">
-                                        <?php echo htmlspecialchars($event['event_name']); ?>
-                                    </a>
-                                    <p class="event-description"><?php echo nl2br(htmlspecialchars($event['event_description'])); ?></p>
-                                    <p class="event-date">Event Date: <?php echo date("F j, Y, g:i a", strtotime($event['created_at'])); ?></p>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <p>No events available for this month.</p>
-                        <?php endif; ?>
-                    </div>
+<div class="add-event-container">
+    <a href="add_event.php" class="add-event-link">Add New Event</a>
+</div>
+
+<main>
+    <div class="events-container">
+        <?php if (!empty($events)): ?>
+            <?php foreach ($events as $event): ?>
+                <div class="event">
+                    <!-- Link each event title to the event details page -->
+                    <a href="events_details.php?id=<?php echo $event['id']; ?>" class="event-title">
+                        <?php echo htmlspecialchars($event['event_name']); ?>
+                    </a>
+                    <p class="event-description"><?php echo nl2br(htmlspecialchars($event['event_description'])); ?></p>
+                    <p class="event-date">Event Date: <?php echo date("F j, Y, g:i a", strtotime($event['created_at'])); ?></p>
                 </div>
             <?php endforeach; ?>
-        </div>
-    </main>
+        <?php else: ?>
+            <p>No events found.</p>
+        <?php endif; ?>
+    </div>
+</main>
 
-    <footer>
-        <p>&copy; 2024 Charity Event Management</p>
-    </footer>
+<footer>
+    <p>&copy; 2024 Charity Event Management</p>
+</footer>
 
 </body>
 </html>

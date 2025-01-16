@@ -42,8 +42,8 @@ if (isset($_POST['save_event'])) {
 
     // Execute the query
     if ($stmt->execute()) {
-        // Redirect back to the event details page after successful update
-        header("Location: event_details.php?id=$eventId");
+        // Redirect back to events.php after successful update
+        header("Location: events.php");
         exit();
     } else {
         echo "Error updating event.";
