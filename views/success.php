@@ -176,21 +176,29 @@ if ($_SESSION['user_type'] === 'coordinator') {
        <!-- Coordinator View -->
 <?php elseif ($_SESSION['user_type'] === 'coordinator'): ?>
     <h3>Add Beneficiary</h3>
-    <form method="POST" class="form-group">
-        <div class="mb-3">
-            <label for="name" class="form-label">Beneficiary Name:</label>
-            <input type="text" id="name" name="name" class="form-control" required>
-        </div>
-        <div class="mb-3">
-            <label for="needs" class="form-label">Needs:</label>
-            <input type="text" id="needs" name="needs" class="form-control" required>
-        </div>
-        <div class="text-center">
-            <button type="submit" name="add_beneficiary" class="btn btn-primary mx-2" style="background-color: #0056b3; border-color: #004085;">Add Beneficiary</button>
-            <button type="submit" name="undo" class="btn mx-2" style="background-color: #007bff; border-color: #0056b3; color: white;">Undo</button>
-            <button type="submit" name="redo" class="btn mx-2" style="background-color: #007bff; border-color: #0056b3; color: white;">Redo</button>
-        </div>
+<form method="POST" class="form-group">
+    <div class="mb-3">
+        <label for="name" class="form-label">Beneficiary Name:</label>
+        <input type="text" id="name" name="name" class="form-control">
+    </div>
+    <div class="mb-3">
+        <label for="needs" class="form-label">Needs:</label>
+        <input type="text" id="needs" name="needs" class="form-control">
+    </div>
+    <div class="text-center">
+        <button type="submit" name="add_beneficiary" class="btn btn-primary">Add Beneficiary</button>
+    </div>
+</form>
+
+<div class="text-center mt-3">
+    <form method="POST" style="display: inline;">
+        <button type="submit" name="undo" class="btn btn-warning">Undo</button>
     </form>
+    <form method="POST" style="display: inline;">
+        <button type="submit" name="redo" class="btn btn-success">Redo</button>
+    </form>
+</div>
+
 
     <h3 class="mt-5">Beneficiaries</h3>
     <table class="table table-bordered mt-3">
