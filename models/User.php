@@ -68,7 +68,7 @@ class User {
 
     public function updateUserRole($userId, $newRole) {
         // Check if role is valid
-        $validRoles = ['user', 'donation_admin', 'payment_admin', 'super_admin'];
+        $validRoles = ['user', 'donation_admin', 'payment_admin', 'super_admin','coordinator'];
         if (!in_array($newRole, $validRoles)) {
             return false; // Invalid role
         }
