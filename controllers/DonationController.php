@@ -57,11 +57,11 @@ class DonationController {
         $this->stateHistory[] = (new \ReflectionClass($newState))->getShortName(); // Save state name
         echo "State changed to: " . end($this->stateHistory) . "<br>";
 
-        // Notify observers about the state change
-        $this->donationSubject->notifyObservers([
-            'userId' => $_SESSION['user_id'] ?? 'Unknown User',
-            'state' => end($this->stateHistory),
-        ]);
+        // // Notify observers about the state change
+        // $this->donationSubject->notifyObservers([
+        //     'userId' => $_SESSION['user_id'] ?? 'Unknown User',
+        //     'state' => end($this->stateHistory),
+        // ]);
     }
 
     // Get state history
