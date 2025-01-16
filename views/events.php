@@ -86,6 +86,7 @@ $months = [
         .event-title {
             font-weight: bold;
             color: #4CAF50;
+            cursor: pointer;
         }
 
         .event-description {
@@ -123,7 +124,10 @@ $months = [
                         <?php if (isset($groupedEvents[$month])): ?>
                             <?php foreach ($groupedEvents[$month] as $event): ?>
                                 <div class="event">
-                                    <p class="event-title"><?php echo htmlspecialchars($event['event_name']); ?></p>
+                                    <!-- Link each event title to the event details page -->
+                                    <a href="events_details.php?id=<?php echo $event['id']; ?>" class="event-title">
+                                        <?php echo htmlspecialchars($event['event_name']); ?>
+                                    </a>
                                     <p class="event-description"><?php echo nl2br(htmlspecialchars($event['event_description'])); ?></p>
                                     <p class="event-date">Event Date: <?php echo date("F j, Y, g:i a", strtotime($event['created_at'])); ?></p>
                                 </div>
