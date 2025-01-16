@@ -17,7 +17,16 @@ class DonationSubject implements Subject {
         }
     }
 
+    // public function notifyObservers($data) {
+    //     foreach ($this->observers as $observer) {
+    //         $observer->update($data);
+    //     }
+    // }
+
     public function notifyObservers($data) {
+        // Ensure the 'amountOrItem' key exists in the $data array
+        $data['amountOrItem'] = $data['amountOrItem'] ?? 'undefined';
+
         foreach ($this->observers as $observer) {
             $observer->update($data);
         }

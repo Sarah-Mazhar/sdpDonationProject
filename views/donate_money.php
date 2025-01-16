@@ -1,5 +1,3 @@
-<!-- views/donate_money.php -->
-
 <?php
 $title = 'Donate Money';
 ob_start();
@@ -19,6 +17,7 @@ ob_start();
             <select name="payment_method" class="form-control" id="payment_method">
                 <option value="cash">Cash</option>
                 <option value="visa">Visa</option>
+                <option value="third_party">Third-Party Gateway</option> <!-- New Option -->
             </select>
         </div>
 

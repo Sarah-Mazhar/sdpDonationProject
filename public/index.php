@@ -97,4 +97,39 @@ elseif ($method === 'POST') {
 } else {
     echo "Invalid request method.";
 }
+
+
+
+
+if (isset($_GET['action']) && $_GET['action'] === 'show_beneficiaries') {
+    $db = Database::getInstance()->getConnection();
+    $stmt = $db->query("SELECT * FROM beneficiaries");
+    $beneficiaries = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    ob_start();
+    ?>
+    <h1 class="text-center">Beneficiaries</h1>
+    <table class="table table-bordered mt-3">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Needs</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($beneficiaries as $beneficiary): ?>
+                <tr>
+                    <td><?= htmlspecialchars($beneficiary['id']) ?></td>
+                    <td><?= htmlspecialchars($beneficiary['name']) ?></td>
+                    <td><?= htmlspecialchars($beneficiary['needs']) ?></td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+    <?php
+    $content = ob_get_clean();
+    require 'views/layout.php';
+}
+
 ?>
