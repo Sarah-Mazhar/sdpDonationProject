@@ -109,7 +109,7 @@ class DonationController {
         if ($result['status']) {
             $moneyDonation->donate($userId, $amount);
             $this->changeState(new CompletedState());
-            echo "Money donation of {$amount} processed successfully! {$result['message']}<br>";
+            echo "Money donation of {$amount} done successfully! {$result['message']}<br>";
 
             $this->donationSubject->notifyObservers([
                 'userId' => $userId,
@@ -181,7 +181,7 @@ class DonationController {
         try {
             $foodDonation->donate($userId, $foodItem, $quantity);
             $this->changeState(new CompletedState());
-            echo "Food donation processed successfully!<br>";
+            echo "Food donation done successfully!<br>";
 
             $this->donationSubject->notifyObservers([
                 'userId' => $userId,
