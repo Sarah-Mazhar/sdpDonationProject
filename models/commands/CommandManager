@@ -1,0 +1,16 @@
+<?php
+class CommandManager {
+    private $history = [];
+
+    public function executeCommand(Command $command) {
+        $command->execute();
+        $this->history[] = $command;
+    }
+
+    public function undo() {
+        if (!empty($this->history)) {
+            $command = array_pop($this->history);
+            $command->undo();
+        }
+    }
+}
