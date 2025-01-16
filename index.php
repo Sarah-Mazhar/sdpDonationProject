@@ -1,5 +1,4 @@
 <?php
-// index.php
 
 session_start();
 
@@ -29,6 +28,12 @@ try {
     die("Database connection failed: " . $e->getMessage());
 }
 
+// Helper function to handle invalid input
+function invalidInput($message = "Invalid input.") {
+    echo $message;
+    exit;
+}
+
 // Handle GET requests
 if ($method === 'GET') {
     switch ($action) {
@@ -39,13 +44,15 @@ if ($method === 'GET') {
                 } elseif ($_GET['login_type'] === 'mobile') {
                     include 'views/login_mobile.php';
                 } else {
-                    echo "Invalid login type.";
+                    invalidInput("Invalid login type.");
                 }
             }
             break;
+
         case 'signup':
             include 'views/signup.php';
             break;
+
         case 'donate':
             if (isset($_GET['donation_type'])) {
                 if ($_GET['donation_type'] === 'money') {
@@ -53,65 +60,76 @@ if ($method === 'GET') {
                 } elseif ($_GET['donation_type'] === 'food') {
                     include 'views/donate_food.php';
                 } else {
-                    echo "Invalid donation type.";
+                    invalidInput("Invalid donation type.");
                 }
             }
             break;
-        
+
+        case 'print_receipt': // New action for printing receipts
+            $type = $_GET['type'] ?? null;
+            if ($type === 'money') {
+                $receipt = $_SESSION['money_receipt'] ?? "No receipt available for money donation.";
+                echo nl2br($receipt); // Display the receipt with newlines converted to <br>
+            } elseif ($type === 'food') {
+                $receipt = $_SESSION['food_receipt'] ?? "No receipt available for food donation.";
+                echo nl2br($receipt); // Display the receipt with newlines converted to <br>
+            } else {
+                invalidInput("Invalid receipt type.");
+            }
+            break;
+
+        default:
+            invalidInput("Invalid action.");
     }
 }
 
-switch ($action) {
-    case 'login':
-        if (isset($_GET['login_type'])) {
-            if ($_GET['login_type'] === 'email' && isset($_POST['email'], $_POST['password'])) {
-                $authController->login($_POST['email'], $_POST['password'], 'email');
-            } elseif ($_GET['login_type'] === 'mobile' && isset($_POST['mobile'], $_POST['password'])) {
-                $authController->login($_POST['mobile'], $_POST['password'], 'mobile');
+// Handle POST requests
+if ($method === 'POST') {
+    switch ($action) {
+        case 'login':
+            if (isset($_GET['login_type'])) {
+                if ($_GET['login_type'] === 'email' && isset($_POST['email'], $_POST['password'])) {
+                    $authController->login($_POST['email'], $_POST['password'], 'email');
+                } elseif ($_GET['login_type'] === 'mobile' && isset($_POST['mobile'], $_POST['password'])) {
+                    $authController->login($_POST['mobile'], $_POST['password'], 'mobile');
+                } else {
+                    invalidInput("Invalid login credentials.");
+                }
             } else {
-                echo "Invalid login credentials.";
+                invalidInput("Login type not specified.");
             }
-        } else {
-            echo "Login type not specified.";
-        }
-        break;
+            break;
 
-    case 'signup':
-        if (isset($_POST['email'], $_POST['password'], $_POST['mobile'])) {
-            $authController->signup($_POST['email'], $_POST['password'], $_POST['mobile']);
-        } else {
-            echo "Please fill in all fields.";
-        }
-        break;
-
-    case 'donate':
-        if (isset($_GET['donation_type'])) {
-            if ($_GET['donation_type'] === 'money' && isset($_POST['amount'], $_POST['payment_method'])) {
-                $donationController->donateMoney($_POST['amount'], $_POST['payment_method']);
-            } elseif ($_GET['donation_type'] === 'food' && isset($_POST['foodItem'], $_POST['quantity'])) {
-                $extras = $_POST['extras'] ?? [];
-                $donationController->donateFood($_POST['foodItem'], $_POST['quantity'], $extras);
+        case 'signup':
+            if (isset($_POST['email'], $_POST['password'], $_POST['mobile'])) {
+                $authController->signup($_POST['email'], $_POST['password'], $_POST['mobile']);
             } else {
-                echo "Invalid donation input.";
+                invalidInput("Please fill in all fields.");
             }
-        } else {
-            echo "Donation type not specified.";
-        }
-        break;
+            break;
 
-    default:
-        
-        break;
+        case 'donate':
+            if (isset($_GET['donation_type'])) {
+                if ($_GET['donation_type'] === 'money' && isset($_POST['amount'], $_POST['payment_method'])) {
+                    $donationController->donateMoney($_POST['amount'], $_POST['payment_method']);
+                } elseif ($_GET['donation_type'] === 'food' && isset($_POST['foodItem'], $_POST['quantity'])) {
+                    $extras = $_POST['extras'] ?? [];
+                    $donationController->donateFood($_POST['foodItem'], $_POST['quantity'], $extras);
+                } else {
+                    invalidInput("Invalid donation input.");
+                }
+            } else {
+                invalidInput("Donation type not specified.");
+            }
+            break;
+
+        default:
+            invalidInput("Invalid action.");
+    }
 }
-
-// Handle invalid request methods
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'GET') {
-    echo "Invalid request method.";
-}
-
 
 // Handle the "Show Beneficiaries" action
-if (isset($_GET['action']) && $_GET['action'] === 'show_beneficiaries') {
+if ($action === 'show_beneficiaries') {
     try {
         $stmt = $db->query("SELECT * FROM beneficiaries");
         $beneficiaries = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -157,4 +175,8 @@ if (!isset($_GET['action'])) {
     exit;
 }
 
-?>
+// Handle invalid request methods
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'GET') {
+    echo "Invalid request method.";
+}
+
