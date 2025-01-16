@@ -21,6 +21,14 @@ $donationController = new DonationController();
 $action = $_GET['action'] ?? null;
 $method = $_SERVER['REQUEST_METHOD'];
 
+// Ensure the database connection is established
+try {
+    $database = Database::getInstance();
+    $db = $database->getConnection(); // Initialize the database connection
+} catch (Exception $e) {
+    die("Database connection failed: " . $e->getMessage());
+}
+
 // Handle GET requests
 if ($method === 'GET') {
     switch ($action) {
@@ -49,13 +57,10 @@ if ($method === 'GET') {
                 }
             }
             break;
-        default:
-            echo "Invalid or no action specified.";
+        
     }
 }
 
-// Handle POST requests
-elseif ($method === 'POST') {
     switch ($action) {
         case 'login':
             if (isset($_GET['login_type'])) {
@@ -93,4 +98,53 @@ elseif ($method === 'POST') {
 } else {
     echo "Invalid request method.";
 }
+
+
+// Handle the "Show Beneficiaries" action
+if (isset($_GET['action']) && $_GET['action'] === 'show_beneficiaries') {
+    try {
+        $stmt = $db->query("SELECT * FROM beneficiaries");
+        $beneficiaries = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        ob_start();
+        ?>
+        <div class="container d-flex flex-column justify-content-center align-items-center vh-100">
+            <h1 class="text-center mb-4">Beneficiaries</h1>
+            <table class="table table-bordered text-center">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Needs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($beneficiaries as $beneficiary): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($beneficiary['id']) ?></td>
+                            <td><?= htmlspecialchars($beneficiary['name']) ?></td>
+                            <td><?= htmlspecialchars($beneficiary['needs']) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php
+        $content = ob_get_clean();
+        $title = "Beneficiaries";
+        require 'views/layout.php';
+        exit;
+    } catch (Exception $e) {
+        die("Error retrieving beneficiaries: " . $e->getMessage());
+    }
+}
+
+// Default message for no action specified
+if (!isset($_GET['action'])) {
+    $content = "<p>Welcome to the Donation Project. Use the navigation to explore the system.</p>";
+    $title = "Welcome";
+    require 'views/layout.php';
+    exit;
+}
+
 ?>

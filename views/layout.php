@@ -28,6 +28,7 @@
                 <li class="nav-item"><a class="nav-link" href="/DonationProjecttt/index.php?action=signup">Sign Up</a></li>
                 <li class="nav-item"><a class="nav-link" href="/DonationProjecttt/index.php?action=donate&donation_type=money">Donate Money</a></li>
                 <li class="nav-item"><a class="nav-link" href="/DonationProjecttt/index.php?action=donate&donation_type=food">Donate Food</a></li>
+                <li class="nav-item"><a class="nav-link" href="/DonationProjecttt/index.php?action=show_beneficiaries">Show Beneficiaries</a></li>
             </ul>
         </div>
     </nav>
