@@ -44,9 +44,21 @@ if ($_SESSION['user_type'] === 'super_admin') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* Position the Event button to the top right */
+        .event-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 999;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
+        <!-- Event Button -->
+        <a href="events.php" class="btn btn-info event-btn">Event</a>
+
         <h1 class="text-center mb-4">Welcome, <?= htmlspecialchars($_SESSION['user_type']) ?>!</h1>
 
         <?php if ($_SESSION['user_type'] === 'super_admin'): ?>
