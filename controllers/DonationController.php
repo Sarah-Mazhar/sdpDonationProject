@@ -5,12 +5,13 @@ require_once __DIR__ . '/../models/donation/AddVegetables.php';
 require_once __DIR__ . '/../models/payment/CashPayment.php';
 require_once __DIR__ . '/../models/payment/VisaPayment.php';
 require_once __DIR__ . '/../models/payment/PaymentContext.php';
+require_once __DIR__ . '/../models/payment/ThirdPartyPaymentGateway.php'; // New
+require_once __DIR__ . '/../models/payment/ThirdPartyPaymentAdapter.php'; // New
 require_once __DIR__ . '/../models/donation/DonationSubject.php';
 require_once __DIR__ . '/../models/observers/EmailObserver.php';
 require_once __DIR__ . '/../models/observers/NotificationObserver.php';
 require_once __DIR__ . '/../models/observers/LogObserver.php';
 require_once __DIR__ . '/../models/donation/ProtectiveDonationProxy.php';
-
 require_once __DIR__ . '/../models/donation/DonationAdminInterface.php';
 require_once __DIR__ . '/../models/donation/RealDonationAdmin.php';
 
@@ -56,6 +57,10 @@ class DonationController {
             $paymentStrategy = new CashPayment();
         } elseif ($paymentMethod === 'visa') {
             $paymentStrategy = new VisaPayment();
+        } elseif ($paymentMethod === 'third_party') {
+            // Use the Third-Party Payment Adapter
+            $thirdPartyGateway = new ThirdPartyPaymentGateway();
+            $paymentStrategy = new ThirdPartyPaymentAdapter($thirdPartyGateway);
         } else {
             echo "Invalid payment method.";
             return;
@@ -82,49 +87,46 @@ class DonationController {
         }
     }
 
+    // Handle Food Donations
+    public function donateFood($foodItem, $quantity, $extras = []) {
+        $userId = $_SESSION['user_id'] ?? null;
 
-// Handle Food Donations
-public function donateFood($foodItem, $quantity, $extras = []) {
-    $userId = $_SESSION['user_id'] ?? null;
+        if (!$userId) {
+            echo "Please log in to donate.";
+            return;
+        }
 
-    if (!$userId) {
-        echo "Please log in to donate.";
-        return;
+        $quantity = intval($quantity);
+        if ($quantity <= 0 || empty($foodItem)) {
+            echo "Invalid food item or quantity.";
+            return;
+        }
+
+        $donationFactory = new DonationFactory();
+        $foodDonation = $donationFactory->createDonation('food');
+        $foodDonation->addItem($foodItem, $quantity);
+
+        // Apply extras
+        if (in_array('fruit', $extras)) {
+            $fruitDecorator = new AddFruit($foodDonation);
+            $fruitDecorator->addItemToDonation();
+        }
+        if (in_array('vegetables', $extras)) {
+            $vegetablesDecorator = new AddVegetables($foodDonation);
+            $vegetablesDecorator->addItemToDonation();
+        }
+
+        // Save donation
+        $foodDonation->donate(userId: $userId);
+
+        // Notify observers
+        $this->donationSubject->notifyObservers([
+            'userId' => $userId,
+            'amountOrItem' => "{$quantity} {$foodItem}" . (empty($extras) ? '' : ' with extras: ' . implode(', ', $extras)),
+            'type' => 'food',
+            'status' => 'success'
+        ]);
     }
-
-    $quantity = intval($quantity);
-    if ($quantity <= 0 || empty($foodItem)) {
-        echo "Invalid food item or quantity.";
-        return;
-    }
-
-    $donationFactory = new DonationFactory();
-    $foodDonation = $donationFactory->createDonation('food');
-    $foodDonation->addItem($foodItem, $quantity);
-
-    // Apply extras
-    if (in_array('fruit', $extras)) {
-        $fruitDecorator = new AddFruit($foodDonation);
-        $fruitDecorator->addItemToDonation();
-    }
-    if (in_array('vegetables', $extras)) {
-        $vegetablesDecorator = new AddVegetables($foodDonation);
-        $vegetablesDecorator->addItemToDonation();
-    }
-
-    // Save donation
-$foodDonation->donate(userId: $userId);
-
-// Notify observers
-$this->donationSubject->notifyObservers([
-    'userId' => $userId,
-    'amountOrItem' => "{$quantity} {$foodItem}" . (empty($extras) ? '' : ' with extras: ' . implode(', ', $extras)),
-    'type' => 'food',
-    'status' => 'success'
-]);
-
-}
-
 
     // View Donations (Admin-only)
     public function viewDonations() {
