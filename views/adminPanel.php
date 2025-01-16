@@ -5,6 +5,11 @@ session_start();
 
 // Database Connection
 require_once 'Database.php';
+require_once '../models/UserIterator.php';
+
+interface AdminInterface {
+    public function accessAdminPanel();
+}
 
 class ProxyAdminAccess implements AdminInterface {
     private $realAdmin;
@@ -41,27 +46,39 @@ class RealAdmin implements AdminInterface {
     }
 
     public function displayUserList() {
-        $users = $this->db->query("SELECT id, email, type FROM users")->fetchAll(PDO::FETCH_ASSOC);
+        $users = $this->fetchUsers();
+        $userIterator = new UserIterator($users);
+
         echo "<table border='1'>";
         echo "<tr><th>ID</th><th>Email</th><th>Role</th><th>Actions</th></tr>";
-        foreach ($users as $user) {
+
+        while ($userIterator->hasNext()) {
+            $user = $userIterator->next();
             echo "<tr>";
-            echo "<td>{$user['id']}</td><td>{$user['email']}</td><td>{$user['type']}</td>";
-            echo "<td>";
-            echo "<form method='post'>";
-            echo "<input type='hidden' name='user_id' value='{$user['id']}'>";
-            echo "<select name='new_role'>";
-            echo "<option value='user'>User</option>";
-            echo "<option value='donation_admin'>Donation Admin</option>";
-            echo "<option value='payment_admin'>Payment Admin</option>";
-            echo "<option value='super_admin'>Super Admin</option>";
-            echo "</select>";
-            echo "<button type='submit' name='change_role'>Change Role</button>";
-            echo "</form>";
-            echo "</td>";
+            echo "<td>{$user['id']}</td>";
+            echo "<td>{$user['email']}</td>";
+            echo "<td>{$user['type']}</td>";
+            echo "<td>
+                <form method='post'>
+                    <input type='hidden' name='user_id' value='{$user['id']}'>
+                    <select name='new_role'>
+                        <option value='user'>User</option>
+                        <option value='donation_admin'>Donation Admin</option>
+                        <option value='payment_admin'>Payment Admin</option>
+                        <option value='super_admin'>Super Admin</option>
+                    </select>
+                    <button type='submit' name='change_role'>Change Role</button>
+                </form>
+              </td>";
             echo "</tr>";
         }
+
         echo "</table>";
+    }
+
+    public function fetchUsers() {
+        $stmt = $this->db->query("SELECT id, email, type FROM users");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function changeUserRole($userId, $newRole) {
@@ -69,10 +86,6 @@ class RealAdmin implements AdminInterface {
         $stmt->execute([':type' => $newRole, ':id' => $userId]);
         echo "User role updated successfully.";
     }
-}
-
-interface AdminInterface {
-    public function accessAdminPanel();
 }
 
 class User {
@@ -98,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_role'])) {
     $userId = $_POST['user_id'];
     $newRole = $_POST['new_role'];
 
-    $db = new Database();
+    $db = Database::getInstance();
     $connection = $db->getConnection();
     $admin = new RealAdmin($connection);
     $admin->changeUserRole($userId, $newRole);
@@ -110,7 +123,7 @@ try {
         throw new Exception("Unauthorized access. Please log in.");
     }
 
-    $db = new Database();
+    $db = Database::getInstance();
     $connection = $db->getConnection();
 
     $user = new User($_SESSION['user_id'], $_SESSION['user_type']);

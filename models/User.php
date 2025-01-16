@@ -81,5 +81,13 @@ class User {
 
         return $stmt->execute();
     }
+
+    public function getUsersForIterator() {
+        $sql = "SELECT id, email, type FROM " . $this->table . " ORDER BY email";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+    
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>

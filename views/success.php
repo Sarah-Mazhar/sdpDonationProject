@@ -1,5 +1,6 @@
 <?php
 require_once '../config/Database.php';
+require_once '../models/UserIterator.php';
 require_once '../models/User.php';
 
 session_start();
@@ -29,9 +30,10 @@ if ($_SESSION['user_type'] === 'super_admin' && $_SERVER['REQUEST_METHOD'] === '
 }
 
 // Fetch all users for super admin view
-$groupedUsers = [];
+$users = [];
 if ($_SESSION['user_type'] === 'super_admin') {
-    $groupedUsers = $userModel->getUsersGroupedByType();
+    $users = $userModel->getUsersForIterator();
+    $userIterator = new UserIterator($users);
 }
 ?>
 
@@ -55,15 +57,12 @@ if ($_SESSION['user_type'] === 'super_admin') {
                 <div class="mb-3">
                     <label for="user_id" class="form-label">Select User:</label>
                     <select name="user_id" id="user_id" class="form-control" required>
-                        <?php foreach ($groupedUsers as $type => $typeUsers): ?>
-                            <optgroup label="<?= ucfirst($type) ?> Users">
-                                <?php foreach ($typeUsers as $user): ?>
-                                    <option value="<?= htmlspecialchars($user['id']) ?>">
-                                        <?= htmlspecialchars($user['email']) ?> (<?= htmlspecialchars($user['type']) ?>)
-                                    </option>
-                                <?php endforeach; ?>
-                            </optgroup>
-                        <?php endforeach; ?>
+                        <?php while ($userIterator->hasNext()): ?>
+                            <?php $user = $userIterator->next(); ?>
+                            <option value="<?= htmlspecialchars($user['id']) ?>">
+                                <?= htmlspecialchars($user['email']) ?> (<?= htmlspecialchars($user['type']) ?>)
+                            </option>
+                        <?php endwhile; ?>
                     </select>
                 </div>
                 <div class="mb-3">
@@ -88,15 +87,15 @@ if ($_SESSION['user_type'] === 'super_admin') {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($groupedUsers as $type => $typeUsers): ?>
-                        <?php foreach ($typeUsers as $user): ?>
-                            <tr>
-                                <td><?= htmlspecialchars($user['id']) ?></td>
-                                <td><?= htmlspecialchars($user['email']) ?></td>
-                                <td><?= htmlspecialchars($user['type']) ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endforeach; ?>
+                    <?php $userIterator->reset(); ?>
+                    <?php while ($userIterator->hasNext()): ?>
+                        <?php $user = $userIterator->next(); ?>
+                        <tr>
+                            <td><?= htmlspecialchars($user['id']) ?></td>
+                            <td><?= htmlspecialchars($user['email']) ?></td>
+                            <td><?= htmlspecialchars($user['type']) ?></td>
+                        </tr>
+                    <?php endwhile; ?>
                 </tbody>
             </table>
 
