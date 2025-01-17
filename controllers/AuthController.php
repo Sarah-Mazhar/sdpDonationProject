@@ -29,8 +29,12 @@ class AuthController {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_type'] = $user['type'];
 
-            // Redirect to success page
-            header('Location: /DonationProjecttt/views/success.php');
+            // Redirect based on user type
+            if ($user['type'] === 'user') {
+                header('Location: /DonationProjecttt/views/user_dashboard.php');
+            } else {
+                header('Location: /DonationProjecttt/views/success.php');
+            }
             exit;
         } else {
             // Redirect back to login with error message
@@ -60,4 +64,3 @@ class AuthController {
         }
     }
 }
-?>
