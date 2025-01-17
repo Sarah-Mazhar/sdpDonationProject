@@ -1,12 +1,12 @@
 <?php
-require_once '../models/payment/ProtectivePaymentProxy.php';
-require_once '../config/Database.php'; // Include the database connection
+// require_once '../models/payment/ProtectivePaymentProxy.php';
+require_once __DIR__ . '/../../config/Database.php'; // Include the database connection
 
 class PaymentManager {
     private $db; // Define the $db property
 
     public function __construct() {
-        $database = new Database(); // Assuming Database.php has a Database class
+        $database = Database::getInstance();
         $this->db = $database->getConnection(); // Initialize the $db property
     }
 

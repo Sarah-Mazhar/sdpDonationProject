@@ -12,6 +12,12 @@ require_once __DIR__ . '/config/Database.php';
 require_once __DIR__ . '/controllers/AuthController.php';
 require_once __DIR__ . '/controllers/DonationController.php';
 
+// echo "Method: " . htmlspecialchars($_SERVER['REQUEST_METHOD']) . "<br>";
+// echo "Action: " . htmlspecialchars($_GET['action'] ?? 'No action provided') . "<br>";
+// echo "POST Data: ";
+// print_r($_POST);
+
+
 // Initialize controllers
 $authController = new AuthController();
 $donationController = new DonationController();
@@ -65,6 +71,10 @@ if ($method === 'GET') {
             }
             break;
 
+        
+        
+        
+
         case 'print_receipt': // New action for printing receipts
             $type = $_GET['type'] ?? null;
             if ($type === 'money') {
@@ -105,6 +115,26 @@ if ($method === 'POST') {
                 $authController->signup($_POST['email'], $_POST['password'], $_POST['mobile']);
             } else {
                 invalidInput("Please fill in all fields.");
+            }
+            break;
+
+        case 'add_payment':
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['amount'], $_POST['method'])) {
+                require_once __DIR__ . '/controllers/PaymentController.php'; // Include the PaymentController
+                $paymentController = new PaymentController();
+                $paymentController->addPayment($_POST['amount'], $_POST['method']);
+            } else {
+                invalidInput("Invalid input for adding payment.");
+            }
+            break;
+        
+        case 'delete_payment':
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['payment_id'])) {
+                require_once __DIR__ . '/controllers/PaymentController.php'; // Include the PaymentController
+                $paymentController = new PaymentController();
+                $paymentController->deletePayment($_POST['payment_id']);
+            } else {
+                invalidInput("Invalid input for deleting payment.");
             }
             break;
 
