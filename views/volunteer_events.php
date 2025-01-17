@@ -125,9 +125,8 @@ $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <p>Location: <?php echo htmlspecialchars($event['event_location']); ?></p>
                     <p>Status: <?php echo htmlspecialchars($event['status']); ?></p>
                     
-                    <!-- Two buttons: "Volunteer for First Time" and "Volunteer Again" -->
-                    <a href="volunteer_form.php?event_id=<?php echo $event['id']; ?>" class="volunteer-btn">Volunteerrr for First Time</a>
-                    <a href="volunteer_form.php?event_id=<?php echo $event['id']; ?>" class="volunteer-btn">Volunteer Again</a>
+                    <!-- Single button: "Volunteer for First Time" -->
+                    <a href="volunteer_form.php?event_id=<?php echo $event['id']; ?>" class="volunteer-btn">Volunteer</a>
                 </div>
             <?php endforeach; ?>
         <?php else: ?>
