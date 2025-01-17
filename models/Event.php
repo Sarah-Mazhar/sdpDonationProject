@@ -1,3 +1,4 @@
+<?php
 class Event {
     public $conn;
 
