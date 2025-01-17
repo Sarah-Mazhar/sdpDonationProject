@@ -56,7 +56,7 @@ if ($_SESSION['user_type'] === 'super_admin') {
     }
 }
 
-// Check if the user is a donation_admin and list all donations
+// Handle Donation Admin Functionality
 if ($_SESSION['user_type'] === 'donation_admin' || $_SESSION['user_type'] === 'super_admin') {
     $allDonations = $donationController->listAllDonations();
 }

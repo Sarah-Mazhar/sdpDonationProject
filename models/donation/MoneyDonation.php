@@ -42,11 +42,6 @@ class MoneyDonation extends DonationTemplate implements DonationI {
         parent::donate($userId, $amount, $quantity); // Calls the template's donation method
     }
 
-    // public function generateReceipt($userId, $amount, $paymentMethod) {
-    //     echo "Receipt: User {$userId} donated {$amount} via {$paymentMethod}.\n";
-    // }
-    
-
     public function generateReceipt($userId, $amount, $paymentMethod) {
         $receipt = "Receipt:\n";
         $receipt .= "User ID: {$userId}\n";

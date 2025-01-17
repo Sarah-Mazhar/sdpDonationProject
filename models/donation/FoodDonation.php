@@ -46,16 +46,6 @@ class FoodDonation extends DonationTemplate implements DonationI {
         echo "Food donation finalized successfully.<br>";
     }
 
-    // Additional method to generate receipt (Template Pattern)
-    // public function generateReceipt($userId, $amountOrItem, $quantity) {
-    //     echo "Receipt: User ID {$userId}, donated {$quantity} of {$amountOrItem}. Thank you!<br>";
-    // }
-
-    // public function generateReceipt($userId, $foodDetails, $extras = null) {
-    //     echo "Receipt: User {$userId} donated food: {$foodDetails}" . 
-    //          ($extras ? " with extras: {$extras}" : "") . ".\n";
-    // }
-
     public function generateReceipt($userId, $foodDetails, $extras = null) {
         $receipt = "Receipt:\n";
         $receipt .= "User ID: {$userId}\n";
