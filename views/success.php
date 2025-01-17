@@ -56,7 +56,6 @@ if ($_SESSION['user_type'] === 'super_admin') {
     }
 }
 
-
 // Coordinator-specific functionality
 if ($_SESSION['user_type'] === 'coordinator') {
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_beneficiary'])) {
@@ -112,7 +111,63 @@ if ($_SESSION['user_type'] === 'coordinator') {
     $stmt = $db->query("SELECT * FROM beneficiaries");
     $beneficiaries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $stmt = $db->query("SELECT id, email FROM users WHERE type = 'user'");
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (isset($_POST['add_donor'])) {
+            $email = $_POST['email'];
+            $phone = $_POST['phone'];
+
+            if (!empty($email) && !empty($phone)) {
+                $stmt = $db->prepare("INSERT INTO users (email, mobile, type) VALUES (:email, :phone, 'user')");
+                $stmt->execute([':email' => $email, ':phone' => $phone]);
+
+                $_SESSION['last_added_donor_id'] = $db->lastInsertId();
+                $_SESSION['last_removed_donor'] = null;
+                echo "<script>alert('Donor added successfully!');</script>";
+            } else {
+                echo "<script>alert('Email and phone are required!');</script>";
+            }
+        }
+
+        if (isset($_POST['undo_donor'])) {
+            if (isset($_SESSION['last_added_donor_id'])) {
+                $lastAddedDonorId = $_SESSION['last_added_donor_id'];
+
+                $stmt = $db->prepare("SELECT * FROM users WHERE id = :id AND type = 'user'");
+                $stmt->execute([':id' => $lastAddedDonorId]);
+                $lastDonor = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                $stmt = $db->prepare("DELETE FROM users WHERE id = :id");
+                $stmt->execute([':id' => $lastAddedDonorId]);
+
+                $_SESSION['last_removed_donor'] = $lastDonor;
+                $_SESSION['last_added_donor_id'] = null;
+                echo "<script>alert('Undo successful!');</script>";
+            } else {
+                echo "<script>alert('Nothing to undo!');</script>";
+            }
+        }
+
+        if (isset($_POST['redo_donor'])) {
+            if (isset($_SESSION['last_removed_donor'])) {
+                $lastDonor = $_SESSION['last_removed_donor'];
+
+                $stmt = $db->prepare("INSERT INTO users (id, email, mobile, type) VALUES (:id, :email, :phone, 'user')");
+                $stmt->execute([
+                    ':id' => $lastDonor['id'],
+                    ':email' => $lastDonor['email'],
+                    ':phone' => $lastDonor['mobile']
+                ]);
+
+                $_SESSION['last_added_donor_id'] = $lastDonor['id'];
+                $_SESSION['last_removed_donor'] = null;
+                echo "<script>alert('Redo successful!');</script>";
+            } else {
+                echo "<script>alert('Nothing to redo!');</script>";
+            }
+        }
+    }
+
+    $stmt = $db->query("SELECT id, email, mobile AS phone FROM users WHERE type = 'user'");
     $donors = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 ?>
@@ -223,12 +278,36 @@ if ($_SESSION['user_type'] === 'coordinator') {
                 </tbody>
             </table>
 
-            <h3>Donors</h3>
+            <h3>Add Donor</h3>
+            <form method="POST" class="form-group">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email:</label>
+                    <input type="email" id="email" name="email" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="phone" class="form-label">Phone Number:</label>
+                    <input type="text" id="phone" name="phone" class="form-control" required>
+                </div>
+                <div class="text-center">
+                    <button type="submit" name="add_donor" class="btn btn-primary">Add Donor</button>
+                </div>
+            </form>
+            <div class="text-center mt-3">
+                <form method="POST" style="display: inline;">
+                    <button type="submit" name="undo_donor" class="btn btn-warning">Undo</button>
+                </form>
+                <form method="POST" style="display: inline;">
+                    <button type="submit" name="redo_donor" class="btn btn-success">Redo</button>
+                </form>
+            </div>
+
+            <h3 class="mt-5">Donors</h3>
             <table class="table table-bordered mt-3">
                 <thead>
                     <tr>
                         <th>ID</th>
                         <th>Email</th>
+                        <th>Phone</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -236,6 +315,7 @@ if ($_SESSION['user_type'] === 'coordinator') {
                         <tr>
                             <td><?= htmlspecialchars($donor['id']) ?></td>
                             <td><?= htmlspecialchars($donor['email']) ?></td>
+                            <td><?= htmlspecialchars($donor['phone']) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

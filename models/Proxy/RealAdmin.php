@@ -11,7 +11,6 @@ class RealAdmin implements AdminInterface {
     }
 
     public function accessAdminPanel() {
-        echo "<h1>Welcome to the Admin Panel</h1>";
         $this->displayUserList();
     }
 
