@@ -5,8 +5,19 @@ class User {
     private $conn;
     private $table = 'users';
 
-    public function __construct($db) {
-        $this->conn = $db;
+    private $id;
+    private $type;
+
+    // Constructor to initialize either a database connection or user properties
+    public function __construct($db = null, $id = null, $type = null) {
+        if ($db !== null) {
+            $this->conn = $db; // Set database connection
+        }
+
+        if ($id !== null && $type !== null) {
+            $this->id = $id; // Set user ID
+            $this->type = $type; // Set user type
+        }
     }
 
     // Method to create a new user
@@ -45,6 +56,7 @@ class User {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    // Method to get users grouped by type
     public function getUsersGroupedByType($includeSuperAdmin = false) {
         $condition = $includeSuperAdmin ? "" : "WHERE type != 'super_admin'";
         $sql = "
@@ -66,9 +78,10 @@ class User {
         return $groupedUsers;
     }
 
+    // Method to update a user's role
     public function updateUserRole($userId, $newRole) {
         // Check if role is valid
-        $validRoles = ['user', 'donation_admin', 'payment_admin', 'super_admin','coordinator'];
+        $validRoles = ['user', 'donation_admin', 'payment_admin', 'super_admin', 'coordinator'];
         if (!in_array($newRole, $validRoles)) {
             return false; // Invalid role
         }
@@ -88,6 +101,16 @@ class User {
         $stmt->execute();
     
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    // Get user type
+    public function getType() {
+        return $this->type;
+    }
+
+    // Get user ID
+    public function getId() {
+        return $this->id;
     }
 }
 ?>
