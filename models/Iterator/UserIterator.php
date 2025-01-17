@@ -1,6 +1,8 @@
 <?php
+require_once 'IteratorInterface.php';
 
-class UserIterator {
+class UserIterator implements IteratorInterface {
+    
     private $users = [];
     private $index = 0;
 

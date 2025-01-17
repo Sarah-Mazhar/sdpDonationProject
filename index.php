@@ -1,8 +1,7 @@
 <?php
-
 session_start();
 
-// Enable error reporting for debugging (optional, remove in production)
+// Enable error reporting for debugging (remove in production)
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -12,24 +11,14 @@ require_once __DIR__ . '/config/Database.php';
 require_once __DIR__ . '/controllers/AuthController.php';
 require_once __DIR__ . '/controllers/DonationController.php';
 
-// echo "Method: " . htmlspecialchars($_SERVER['REQUEST_METHOD']) . "<br>";
-// echo "Action: " . htmlspecialchars($_GET['action'] ?? 'No action provided') . "<br>";
-// echo "POST Data: ";
-// print_r($_POST);
-
-
 // Initialize controllers
 $authController = new AuthController();
 $donationController = new DonationController();
 
-// Get the action and method
-$action = $_GET['action'] ?? null;
-$method = $_SERVER['REQUEST_METHOD'];
-
 // Ensure the database connection is established
 try {
     $database = Database::getInstance();
-    $db = $database->getConnection(); // Initialize the database connection
+    $db = $database->getConnection();
 } catch (Exception $e) {
     die("Database connection failed: " . $e->getMessage());
 }
@@ -41,18 +30,12 @@ function invalidInput($message = "Invalid input.") {
 }
 
 // Handle GET requests
-if ($method === 'GET') {
+function handleGetRequest($action) {
+    global $authController, $donationController;
+
     switch ($action) {
         case 'login':
-            if (isset($_GET['login_type'])) {
-                if ($_GET['login_type'] === 'email') {
-                    include 'views/login.php';
-                } elseif ($_GET['login_type'] === 'mobile') {
-                    include 'views/login_mobile.php';
-                } else {
-                    invalidInput("Invalid login type.");
-                }
-            }
+            handleLoginView();
             break;
 
         case 'signup':
@@ -60,32 +43,15 @@ if ($method === 'GET') {
             break;
 
         case 'donate':
-            if (isset($_GET['donation_type'])) {
-                if ($_GET['donation_type'] === 'money') {
-                    include 'views/donate_money.php';
-                } elseif ($_GET['donation_type'] === 'food') {
-                    include 'views/donate_food.php';
-                } else {
-                    invalidInput("Invalid donation type.");
-                }
-            }
+            handleDonationView();
             break;
 
-        
-        
-        
+        case 'print_receipt':
+            handleReceiptView();
+            break;
 
-        case 'print_receipt': // New action for printing receipts
-            $type = $_GET['type'] ?? null;
-            if ($type === 'money') {
-                $receipt = $_SESSION['money_receipt'] ?? "No receipt available for money donation.";
-                echo nl2br($receipt); // Display the receipt with newlines converted to <br>
-            } elseif ($type === 'food') {
-                $receipt = $_SESSION['food_receipt'] ?? "No receipt available for food donation.";
-                echo nl2br($receipt); // Display the receipt with newlines converted to <br>
-            } else {
-                invalidInput("Invalid receipt type.");
-            }
+        case 'show_beneficiaries':
+            showBeneficiaries();
             break;
 
         default:
@@ -94,63 +60,28 @@ if ($method === 'GET') {
 }
 
 // Handle POST requests
-if ($method === 'POST') {
+function handlePostRequest($action) {
+    global $authController, $donationController;
+
     switch ($action) {
         case 'login':
-            if (isset($_GET['login_type'])) {
-                if ($_GET['login_type'] === 'email' && isset($_POST['email'], $_POST['password'])) {
-                    $authController->login($_POST['email'], $_POST['password'], 'email');
-                } elseif ($_GET['login_type'] === 'mobile' && isset($_POST['mobile'], $_POST['password'])) {
-                    $authController->login($_POST['mobile'], $_POST['password'], 'mobile');
-                } else {
-                    invalidInput("Invalid login credentials.");
-                }
-            } else {
-                invalidInput("Login type not specified.");
-            }
+            handleLogin();
             break;
 
         case 'signup':
-            if (isset($_POST['email'], $_POST['password'], $_POST['mobile'])) {
-                $authController->signup($_POST['email'], $_POST['password'], $_POST['mobile']);
-            } else {
-                invalidInput("Please fill in all fields.");
-            }
+            handleSignup();
             break;
 
         case 'add_payment':
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['amount'], $_POST['method'])) {
-                require_once __DIR__ . '/controllers/PaymentController.php'; // Include the PaymentController
-                $paymentController = new PaymentController();
-                $paymentController->addPayment($_POST['amount'], $_POST['method']);
-            } else {
-                invalidInput("Invalid input for adding payment.");
-            }
+            handleAddPayment();
             break;
-        
+
         case 'delete_payment':
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['payment_id'])) {
-                require_once __DIR__ . '/controllers/PaymentController.php'; // Include the PaymentController
-                $paymentController = new PaymentController();
-                $paymentController->deletePayment($_POST['payment_id']);
-            } else {
-                invalidInput("Invalid input for deleting payment.");
-            }
+            handleDeletePayment();
             break;
 
         case 'donate':
-            if (isset($_GET['donation_type'])) {
-                if ($_GET['donation_type'] === 'money' && isset($_POST['amount'], $_POST['payment_method'])) {
-                    $donationController->donateMoney($_POST['amount'], $_POST['payment_method']);
-                } elseif ($_GET['donation_type'] === 'food' && isset($_POST['foodItem'], $_POST['quantity'])) {
-                    $extras = $_POST['extras'] ?? [];
-                    $donationController->donateFood($_POST['foodItem'], $_POST['quantity'], $extras);
-                } else {
-                    invalidInput("Invalid donation input.");
-                }
-            } else {
-                invalidInput("Donation type not specified.");
-            }
+            handleDonation();
             break;
 
         default:
@@ -158,8 +89,51 @@ if ($method === 'POST') {
     }
 }
 
-// Handle the "Show Beneficiaries" action
-if ($action === 'show_beneficiaries') {
+// GET Handlers
+function handleLoginView() {
+    if (isset($_GET['login_type'])) {
+        if ($_GET['login_type'] === 'email') {
+            include 'views/login.php';
+        } elseif ($_GET['login_type'] === 'mobile') {
+            include 'views/login_mobile.php';
+        } else {
+            invalidInput("Invalid login type.");
+        }
+    } else {
+        invalidInput("Login type not specified.");
+    }
+}
+
+function handleDonationView() {
+    if (isset($_GET['donation_type'])) {
+        if ($_GET['donation_type'] === 'money') {
+            include 'views/donate_money.php';
+        } elseif ($_GET['donation_type'] === 'food') {
+            include 'views/donate_food.php';
+        } else {
+            invalidInput("Invalid donation type.");
+        }
+    } else {
+        invalidInput("Donation type not specified.");
+    }
+}
+
+function handleReceiptView() {
+    $type = $_GET['type'] ?? null;
+    if ($type === 'money') {
+        $receipt = $_SESSION['money_receipt'] ?? "No receipt available for money donation.";
+        echo nl2br($receipt);
+    } elseif ($type === 'food') {
+        $receipt = $_SESSION['food_receipt'] ?? "No receipt available for food donation.";
+        echo nl2br($receipt);
+    } else {
+        invalidInput("Invalid receipt type.");
+    }
+}
+
+function showBeneficiaries() {
+    global $db;
+
     try {
         $stmt = $db->query("SELECT * FROM beneficiaries");
         $beneficiaries = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -188,25 +162,86 @@ if ($action === 'show_beneficiaries') {
             </table>
         </div>
         <?php
-        $content = ob_get_clean();
-        $title = "Beneficiaries";
-        require 'views/layout.php';
-        exit;
+        echo ob_get_clean();
     } catch (Exception $e) {
         die("Error retrieving beneficiaries: " . $e->getMessage());
     }
 }
 
-// Default message for no action specified
-if (!isset($_GET['action'])) {
-    $content = "<p>Welcome to the Donation Project. Use the navigation to explore the system.</p>";
-    $title = "Welcome";
-    require 'views/layout.php';
-    exit;
+// POST Handlers
+function handleLogin() {
+    global $authController;
+
+    if (isset($_GET['login_type'])) {
+        if ($_GET['login_type'] === 'email' && isset($_POST['email'], $_POST['password'])) {
+            $authController->login($_POST['email'], $_POST['password'], 'email');
+        } elseif ($_GET['login_type'] === 'mobile' && isset($_POST['mobile'], $_POST['password'])) {
+            $authController->login($_POST['mobile'], $_POST['password'], 'mobile');
+        } else {
+            invalidInput("Invalid login credentials.");
+        }
+    } else {
+        invalidInput("Login type not specified.");
+    }
 }
 
-// Handle invalid request methods
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'GET') {
+function handleSignup() {
+    global $authController;
+
+    if (isset($_POST['email'], $_POST['password'], $_POST['mobile'])) {
+        $authController->signup($_POST['email'], $_POST['password'], $_POST['mobile']);
+    } else {
+        invalidInput("Please fill in all fields.");
+    }
+}
+
+function handleAddPayment() {
+    require_once __DIR__ . '/controllers/PaymentController.php';
+    $paymentController = new PaymentController();
+
+    if (isset($_POST['amount'], $_POST['method'])) {
+        $paymentController->addPayment($_POST['amount'], $_POST['method']);
+    } else {
+        invalidInput("Invalid input for adding payment.");
+    }
+}
+
+function handleDeletePayment() {
+    require_once __DIR__ . '/controllers/PaymentController.php';
+    $paymentController = new PaymentController();
+
+    if (isset($_POST['payment_id'])) {
+        $paymentController->deletePayment($_POST['payment_id']);
+    } else {
+        invalidInput("Invalid input for deleting payment.");
+    }
+}
+
+function handleDonation() {
+    global $donationController;
+
+    if (isset($_GET['donation_type'])) {
+        if ($_GET['donation_type'] === 'money' && isset($_POST['amount'], $_POST['payment_method'])) {
+            $donationController->donateMoney($_POST['amount'], $_POST['payment_method']);
+        } elseif ($_GET['donation_type'] === 'food' && isset($_POST['foodItem'], $_POST['quantity'])) {
+            $extras = $_POST['extras'] ?? [];
+            $donationController->donateFood($_POST['foodItem'], $_POST['quantity'], $extras);
+        } else {
+            invalidInput("Invalid donation input.");
+        }
+    } else {
+        invalidInput("Donation type not specified.");
+    }
+}
+
+// Main entry point
+$action = $_GET['action'] ?? null;
+$method = $_SERVER['REQUEST_METHOD'];
+
+if ($method === 'GET') {
+    handleGetRequest($action);
+} elseif ($method === 'POST') {
+    handlePostRequest($action);
+} else {
     echo "Invalid request method.";
 }
-

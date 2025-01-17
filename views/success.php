@@ -1,6 +1,7 @@
 <?php
+// Required Files
 require_once '../config/Database.php';
-require_once '../models/UserIterator.php';
+require_once '../models/Iterator/UserIterator.php';
 require_once '../models/User.php';
 require_once '../models/commands/AddBeneficiaryCommand.php';
 require_once '../models/commands/AddUserCommand.php';
@@ -11,32 +12,29 @@ require_once '../controllers/PaymentController.php';
 
 session_start();
 
-// Ensure the user is logged in
+// Ensure User Is Logged In
 if (!isset($_SESSION['user_type'])) {
     echo "Access denied.";
     exit;
 }
 
-// Database connection
+// Database Connection
 $db = Database::getInstance()->getConnection();
 $userModel = new User($db);
 $commandManager = new CommandManager();
+$userIterator = $userModel->getUsersForIterator();
 
-// Handle role assignment for super admins
+// Handle Super Admin Functionality
 $groupedUsers = [];
 if ($_SESSION['user_type'] === 'super_admin') {
     try {
         echo "User ID: " . $_SESSION['user_id'] . "<br>";
         echo "User Type: " . $_SESSION['user_type'] . "<br>";
 
-        // Create User and ProxyAdminAccess objects
         $user = new User($_SESSION['user_id'], $_SESSION['user_type']);
         $proxyAdminAccess = new ProxyAdminAccess($user, $db);
-
-        // Attempt to access the admin panel
         $proxyAdminAccess->accessAdminPanel();
 
-        // Handle role updates
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'], $_POST['type'])) {
             $userId = $_POST['user_id'];
             $newRole = $_POST['type'];
@@ -49,71 +47,64 @@ if ($_SESSION['user_type'] === 'super_admin') {
             }
         }
 
-        // Fetch all users grouped by type
         $groupedUsers = $userModel->getUsersGroupedByType();
     } catch (Exception $e) {
-        // Handle any exceptions from ProxyAdminAccess
         echo "<div style='color: red; text-align: center;'>{$e->getMessage()}</div>";
         exit;
     }
 }
 
-// Fetch all users for super admin view
-$users = [];
-if ($_SESSION['user_type'] === 'super_admin') {
-    $users = $userModel->getUsersForIterator();
-    $userIterator = new UserIterator($users);
-}
-
-// Coordinator-specific functionality
+// Handle Coordinator Functionality
 if ($_SESSION['user_type'] === 'coordinator') {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_beneficiary'])) {
-        $name = $_POST['name'];
-        $needs = $_POST['needs'];
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (isset($_POST['add_beneficiary'])) {
+            $name = $_POST['name'];
+            $needs = $_POST['needs'];
 
-        $stmt = $db->prepare("INSERT INTO beneficiaries (name, needs) VALUES (:name, :needs)");
-        $stmt->execute([':name' => $name, ':needs' => $needs]);
+            $stmt = $db->prepare("INSERT INTO beneficiaries (name, needs) VALUES (:name, :needs)");
+            $stmt->execute([':name' => $name, ':needs' => $needs]);
 
-        $_SESSION['last_added_id'] = $db->lastInsertId();
-        $_SESSION['last_removed_beneficiary'] = null;
-        echo "<script>alert('Beneficiary added successfully!');</script>";
-    }
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['undo'])) {
-        if (isset($_SESSION['last_added_id'])) {
-            $lastAddedId = $_SESSION['last_added_id'];
-
-            $stmt = $db->prepare("SELECT * FROM beneficiaries WHERE id = :id");
-            $stmt->execute([':id' => $lastAddedId]);
-            $lastBeneficiary = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            $stmt = $db->prepare("DELETE FROM beneficiaries WHERE id = :id");
-            $stmt->execute([':id' => $lastAddedId]);
-
-            $_SESSION['last_removed_beneficiary'] = $lastBeneficiary;
-            $_SESSION['last_added_id'] = null;
-            echo "<script>alert('Undo successful!');</script>";
-        } else {
-            echo "<script>alert('Nothing to undo!');</script>";
-        }
-    }
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redo'])) {
-        if (isset($_SESSION['last_removed_beneficiary'])) {
-            $lastBeneficiary = $_SESSION['last_removed_beneficiary'];
-
-            $stmt = $db->prepare("INSERT INTO beneficiaries (id, name, needs) VALUES (:id, :name, :needs)");
-            $stmt->execute([
-                ':id' => $lastBeneficiary['id'],
-                ':name' => $lastBeneficiary['name'],
-                ':needs' => $lastBeneficiary['needs']
-            ]);
-
-            $_SESSION['last_added_id'] = $lastBeneficiary['id'];
+            $_SESSION['last_added_id'] = $db->lastInsertId();
             $_SESSION['last_removed_beneficiary'] = null;
-            echo "<script>alert('Redo successful!');</script>";
-        } else {
-            echo "<script>alert('Nothing to redo!');</script>";
+            echo "<script>alert('Beneficiary added successfully!');</script>";
+        }
+
+        if (isset($_POST['undo'])) {
+            if (isset($_SESSION['last_added_id'])) {
+                $lastAddedId = $_SESSION['last_added_id'];
+
+                $stmt = $db->prepare("SELECT * FROM beneficiaries WHERE id = :id");
+                $stmt->execute([':id' => $lastAddedId]);
+                $lastBeneficiary = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                $stmt = $db->prepare("DELETE FROM beneficiaries WHERE id = :id");
+                $stmt->execute([':id' => $lastAddedId]);
+
+                $_SESSION['last_removed_beneficiary'] = $lastBeneficiary;
+                $_SESSION['last_added_id'] = null;
+                echo "<script>alert('Undo successful!');</script>";
+            } else {
+                echo "<script>alert('Nothing to undo!');</script>";
+            }
+        }
+
+        if (isset($_POST['redo'])) {
+            if (isset($_SESSION['last_removed_beneficiary'])) {
+                $lastBeneficiary = $_SESSION['last_removed_beneficiary'];
+
+                $stmt = $db->prepare("INSERT INTO beneficiaries (id, name, needs) VALUES (:id, :name, :needs)");
+                $stmt->execute([
+                    ':id' => $lastBeneficiary['id'],
+                    ':name' => $lastBeneficiary['name'],
+                    ':needs' => $lastBeneficiary['needs']
+                ]);
+
+                $_SESSION['last_added_id'] = $lastBeneficiary['id'];
+                $_SESSION['last_removed_beneficiary'] = null;
+                echo "<script>alert('Redo successful!');</script>";
+            } else {
+                echo "<script>alert('Nothing to redo!');</script>";
+            }
         }
     }
 
@@ -133,7 +124,6 @@ if ($_SESSION['user_type'] === 'coordinator') {
     <title>Dashboard</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        /* Position the Event button to the top right */
         .event-btn {
             position: fixed;
             top: 20px;
@@ -144,13 +134,12 @@ if ($_SESSION['user_type'] === 'coordinator') {
 </head>
 <body>
     <div class="container mt-5">
-        <!-- Event Button -->
         <a href="events.php" class="btn btn-info event-btn">Event</a>
-
         <h1 class="text-center mb-4">Welcome, <?= htmlspecialchars($_SESSION['user_type']) ?>!</h1>
 
         <?php if ($_SESSION['user_type'] === 'super_admin'): ?>
             <h3 class="text-center">Manage User Roles</h3>
+            <!-- Super Admin Role Management Form -->
             <form method="POST" class="form-group">
                 <div class="mb-3">
                     <label for="user_id" class="form-label">Select User:</label>
@@ -176,6 +165,7 @@ if ($_SESSION['user_type'] === 'coordinator') {
             </form>
 
             <h3 class="text-center mt-5">All Users</h3>
+            <!-- Super Admin Users Table -->
             <table class="table table-bordered mt-3">
                 <thead>
                     <tr>
@@ -196,55 +186,55 @@ if ($_SESSION['user_type'] === 'coordinator') {
                     <?php endwhile; ?>
                 </tbody>
             </table>
+        <?php elseif ($_SESSION['user_type'] === 'coordinator'): ?>
+            <h3>Add Beneficiary</h3>
+            <!-- Coordinator Add Beneficiary Form -->
+            <form method="POST" class="form-group">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Beneficiary Name:</label>
+                    <input type="text" id="name" name="name" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label for="needs" class="form-label">Needs:</label>
+                    <input type="text" id="needs" name="needs" class="form-control">
+                </div>
+                <div class="text-center">
+                    <button type="submit" name="add_beneficiary" class="btn btn-primary">Add Beneficiary</button>
+                </div>
+            </form>
 
-       <!-- Coordinator View -->
-<?php elseif ($_SESSION['user_type'] === 'coordinator'): ?>
-    <h3>Add Beneficiary</h3>
-<form method="POST" class="form-group">
-    <div class="mb-3">
-        <label for="name" class="form-label">Beneficiary Name:</label>
-        <input type="text" id="name" name="name" class="form-control">
-    </div>
-    <div class="mb-3">
-        <label for="needs" class="form-label">Needs:</label>
-        <input type="text" id="needs" name="needs" class="form-control">
-    </div>
-    <div class="text-center">
-        <button type="submit" name="add_beneficiary" class="btn btn-primary">Add Beneficiary</button>
-    </div>
-</form>
+            <div class="text-center mt-3">
+                <form method="POST" style="display: inline;">
+                    <button type="submit" name="undo" class="btn btn-warning">Undo</button>
+                </form>
+                <form method="POST" style="display: inline;">
+                    <button type="submit" name="redo" class="btn btn-success">Redo</button>
+                </form>
+            </div>
 
-<div class="text-center mt-3">
-    <form method="POST" style="display: inline;">
-        <button type="submit" name="undo" class="btn btn-warning">Undo</button>
-    </form>
-    <form method="POST" style="display: inline;">
-        <button type="submit" name="redo" class="btn btn-success">Redo</button>
-    </form>
-</div>
-
-
-    <h3 class="mt-5">Beneficiaries</h3>
-    <table class="table table-bordered mt-3">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Needs</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($beneficiaries as $beneficiary): ?>
-                <tr>
-                    <td><?= htmlspecialchars($beneficiary['id']) ?></td>
-                    <td><?= htmlspecialchars($beneficiary['name']) ?></td>
-                    <td><?= htmlspecialchars($beneficiary['needs']) ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+            <h3 class="mt-5">Beneficiaries</h3>
+            <!-- Coordinator Beneficiaries Table -->
+            <table class="table table-bordered mt-3">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Needs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($beneficiaries as $beneficiary): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($beneficiary['id']) ?></td>
+                            <td><?= htmlspecialchars($beneficiary['name']) ?></td>
+                            <td><?= htmlspecialchars($beneficiary['needs']) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
 
             <h3>Donors</h3>
+            <!-- Coordinator Donors Table -->
             <table class="table table-bordered mt-3">
                 <thead>
                     <tr>
