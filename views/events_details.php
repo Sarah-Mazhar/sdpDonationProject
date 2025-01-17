@@ -41,7 +41,7 @@ if ($event):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Event Details</title>
     <style>
-        /* General body styling */
+        /* General styling */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f7fc;
@@ -96,10 +96,6 @@ if ($event):
             font-size: 16px;
         }
 
-        textarea {
-            resize: vertical;
-        }
-
         button {
             background-color: #4CAF50;
             color: white;
@@ -114,19 +110,6 @@ if ($event):
         button:hover {
             background-color: #45a049;
         }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group:last-child {
-            margin-bottom: 0;
-        }
-
-        .disabled-input {
-            background-color: #f1f1f1;
-            cursor: not-allowed;
-        }
     </style>
 </head>
 <body>
@@ -140,31 +123,25 @@ if ($event):
             <h2>Update Event Information</h2>
             <form action="edit_event.php?id=<?php echo $eventId; ?>" method="POST">
 
-                <div class="form-group">
-                    <label for="event_name">Event Name:</label>
-                    <input type="text" id="event_name" name="event_name" value="<?php echo htmlspecialchars($event['event_name']); ?>" required>
-                </div>
+                <label for="event_name">Event Name:</label>
+                <input type="text" id="event_name" name="event_name" value="<?php echo htmlspecialchars($event['event_name']); ?>" required>
 
-                <div class="form-group">
-                    <label for="month">Month:</label>
-                    <input type="text" id="month" name="month" value="<?php echo htmlspecialchars($event['month']); ?>" required>
-                </div>
+                <label for="event_location">Event Location:</label>
+                <input type="text" id="event_location" name="event_location" value="<?php echo htmlspecialchars($event['event_location']); ?>" required>
 
-                <div class="form-group">
-                    <label for="event_description">Event Description:</label>
-                    <textarea id="event_description" name="event_description" rows="5" required><?php echo htmlspecialchars($event['event_description']); ?></textarea>
-                </div>
+                <label for="event_date">Event Date:</label>
+                <input type="date" id="event_date" name="event_date" value="<?php echo htmlspecialchars($event['event_date']); ?>" required>
 
-                <div class="form-group">
-                    <label for="created_at">Created At:</label>
-                    <input type="text" id="created_at" name="created_at" value="<?php echo htmlspecialchars($event['created_at']); ?>" disabled class="disabled-input">
-                </div>
+                <label for="event_time">Event Time:</label>
+                <input type="time" id="event_time" name="event_time" value="<?php echo htmlspecialchars($event['event_time']); ?>" required>
 
-                <div class="form-group">
-                    <label for="updated_at">Updated At:</label>
-                    <input type="text" id="updated_at" name="updated_at" value="<?php echo htmlspecialchars($event['updated_at']); ?>" disabled class="disabled-input">
-                </div>
+                <label for="max_no_volunteers">Max Number of Volunteers:</label>
+                <input type="number" id="max_no_volunteers" name="max_no_volunteers" value="<?php echo htmlspecialchars($event['max_no_volunteers']); ?>" required>
 
+                <label for="event_description">Event Description:</label>
+                <textarea id="event_description" name="event_description" rows="5" required><?php echo htmlspecialchars($event['event_description']); ?></textarea>
+
+                <!-- Save Changes Button -->
                 <button type="submit" name="save_event">Save Changes</button>
             </form>
         </div>
@@ -182,4 +159,3 @@ else:
     echo "Event not found.";
 endif;
 ?>
-
