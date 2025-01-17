@@ -81,7 +81,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
 </head>
 <body>
     <div class="navbar">
-        <span>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</span>
+        <span>
+            Welcome, 
+            <?php
+            // Check if 'username' exists in the session before displaying it
+            echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : "User";
+            ?>!
+        </span>
         <form action="" method="POST">
             <button type="submit" name="logout">Logout</button>
         </form>
@@ -90,8 +96,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
     <div class="container">
         <h1>User Dashboard</h1>
         <div class="options">
-            <div class="option" onclick="location.href='show_profile.php';">Show Profile</div>
-            <div class="option" onclick="location.href='donate.php';">Donate Money and Food</div>
+            <div class="option" onclick="location.href='/DonationProjecttt/index.php?action=donate&donation_type=money';">Donate money</div>
+            <div class="option" onclick="location.href='/DonationProjecttt/index.php?action=donate&donation_type=food';">Donate Food</div>
             <!-- Update the link for Volunteer in Event to go to volunteer_events.php -->
             <div class="option" onclick="location.href='volunteer_events.php';">Volunteer in Event</div>
         </div>

@@ -16,6 +16,8 @@ class MoneyDonation extends DonationTemplate implements DonationI {
         // Create database connection
         $db = Database::getInstance()->getConnection();
 
+        $type = 'money'; // Donation type is money
+
         // Prepare SQL query to insert donation
         $query = "INSERT INTO donations (type, amount, user_id) VALUES (:type, :amount, :user_id)";
         $stmt = $db->prepare($query);
@@ -25,7 +27,7 @@ class MoneyDonation extends DonationTemplate implements DonationI {
         $stmt->bindParam(':amount', $amountOrItem);
         $stmt->bindParam(':user_id', $userId);
 
-        $type = 'money'; // Donation type is money
+       
 
         $stmt->execute(); // Execute the query to insert donation record
 

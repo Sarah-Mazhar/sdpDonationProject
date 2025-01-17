@@ -7,6 +7,7 @@ require_once '../models/commands/AddUserCommand.php';
 require_once '../models/commands/CommandManager.php';
 require_once '../models/Proxy/ProxyAdminAccess.php';
 require_once '../models/Proxy/RealAdmin.php';
+require_once '../controllers/PaymentController.php';
 
 session_start();
 
@@ -196,48 +197,52 @@ if ($_SESSION['user_type'] === 'coordinator') {
                 </tbody>
             </table>
 
-        <?php elseif ($_SESSION['user_type'] === 'coordinator'): ?>
-            <h3>Add Beneficiary</h3>
-            <form method="POST" class="form-group">
-                <div class="mb-3">
-                    <label for="name" class="form-label">Beneficiary Name:</label>
-                    <input type="text" id="name" name="name" class="form-control">
-                </div>
-                <div class="mb-3">
-                    <label for="needs" class="form-label">Needs:</label>
-                    <input type="text" id="needs" name="needs" class="form-control">
-                </div>
-                <div class="text-center">
-                    <button type="submit" name="add_beneficiary" class="btn btn-primary">Add Beneficiary</button>
-                </div>
-            </form>
-            <div class="text-center mt-3">
-                <form method="POST" style="display: inline;">
-                    <button type="submit" name="undo" class="btn btn-warning">Undo</button>
-                </form>
-                <form method="POST" style="display: inline;">
-                    <button type="submit" name="redo" class="btn btn-success">Redo</button>
-                </form>
-            </div>
-            <h3 class="mt-5">Beneficiaries</h3>
-            <table class="table table-bordered mt-3">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Needs</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($beneficiaries as $beneficiary): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($beneficiary['id']) ?></td>
-                            <td><?= htmlspecialchars($beneficiary['name']) ?></td>
-                            <td><?= htmlspecialchars($beneficiary['needs']) ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+       <!-- Coordinator View -->
+<?php elseif ($_SESSION['user_type'] === 'coordinator'): ?>
+    <h3>Add Beneficiary</h3>
+<form method="POST" class="form-group">
+    <div class="mb-3">
+        <label for="name" class="form-label">Beneficiary Name:</label>
+        <input type="text" id="name" name="name" class="form-control">
+    </div>
+    <div class="mb-3">
+        <label for="needs" class="form-label">Needs:</label>
+        <input type="text" id="needs" name="needs" class="form-control">
+    </div>
+    <div class="text-center">
+        <button type="submit" name="add_beneficiary" class="btn btn-primary">Add Beneficiary</button>
+    </div>
+</form>
+
+<div class="text-center mt-3">
+    <form method="POST" style="display: inline;">
+        <button type="submit" name="undo" class="btn btn-warning">Undo</button>
+    </form>
+    <form method="POST" style="display: inline;">
+        <button type="submit" name="redo" class="btn btn-success">Redo</button>
+    </form>
+</div>
+
+
+    <h3 class="mt-5">Beneficiaries</h3>
+    <table class="table table-bordered mt-3">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Needs</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($beneficiaries as $beneficiary): ?>
+                <tr>
+                    <td><?= htmlspecialchars($beneficiary['id']) ?></td>
+                    <td><?= htmlspecialchars($beneficiary['name']) ?></td>
+                    <td><?= htmlspecialchars($beneficiary['needs']) ?></td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
 
             <h3>Donors</h3>
             <table class="table table-bordered mt-3">
