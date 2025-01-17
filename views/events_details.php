@@ -156,13 +156,23 @@ if ($event):
                 </div>
 
                 <div class="form-group">
-                    <label for="created_at">Created At:</label>
-                    <input type="text" id="created_at" name="created_at" value="<?php echo htmlspecialchars($event['created_at']); ?>" disabled class="disabled-input">
+                    <label for="event_date">Event Date:</label>
+                    <input type="text" id="event_date" name="event_date" value="<?php echo htmlspecialchars($event['event_date']); ?>" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="updated_at">Updated At:</label>
-                    <input type="text" id="updated_at" name="updated_at" value="<?php echo htmlspecialchars($event['updated_at']); ?>" disabled class="disabled-input">
+                    <label for="event_location">Event Location:</label>
+                    <input type="text" id="event_location" name="event_location" value="<?php echo htmlspecialchars($event['event_location']); ?>" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="no_of_applicants">Number of Applicants:</label>
+                    <input type="number" id="no_of_applicants" name="no_of_applicants" value="<?php echo htmlspecialchars($event['no_of_applicants']); ?>" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="created_at">Created At:</label>
+                    <input type="text" id="created_at" name="created_at" value="<?php echo htmlspecialchars($event['created_at']); ?>" disabled class="disabled-input">
                 </div>
 
                 <button type="submit" name="save_event">Save Changes</button>
@@ -182,4 +192,3 @@ else:
     echo "Event not found.";
 endif;
 ?>
-

@@ -12,10 +12,12 @@ error_reporting(E_ALL);
 require_once __DIR__ . '/config/Database.php';
 require_once __DIR__ . '/controllers/AuthController.php';
 require_once __DIR__ . '/controllers/DonationController.php';
+require_once __DIR__ . '/controllers/VolunteerController.php';
 
 // Initialize controllers
 $authController = new AuthController();
 $donationController = new DonationController();
+
 
 // Get the action and method
 $action = $_GET['action'] ?? null;

@@ -1,5 +1,5 @@
-<?php 
-// views/view_events.php
+<?php
+// views/volunteer_events.php
 
 // Database connection and query fetching
 require_once __DIR__ . '/../config/Database.php';
@@ -18,9 +18,9 @@ $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All Events</title>
+    <title>Volunteer for Events</title>
     <style>
-        /* Basic styling for the events page */
+        /* Basic styling for the volunteer events page */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f9;
@@ -80,23 +80,19 @@ $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
             color: #888;
         }
 
-        .add-event-container {
-            margin: 20px auto;
-            text-align: center;
-        }
-
-        .add-event-link {
+        .volunteer-btn {
             display: inline-block;
             background-color: #4CAF50;
             color: white;
             text-decoration: none;
-            padding: 10px 20px;
+            padding: 8px 15px;
             border-radius: 5px;
-            font-size: 1.2em;
+            font-size: 1em;
             transition: background-color 0.3s ease-in-out;
+            margin-right: 10px;
         }
 
-        .add-event-link:hover {
+        .volunteer-btn:hover {
             background-color: #45a049;
         }
 
@@ -112,12 +108,8 @@ $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <body>
 
 <header>
-    <h1>All Charity Events</h1>
+    <h1>Volunteer for Charity Events</h1>
 </header>
-
-<div class="add-event-container">
-    <a href="add_event.php" class="add-event-link">Add New Event</a>
-</div>
 
 <main>
     <div class="events-container">
@@ -125,13 +117,17 @@ $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <?php foreach ($events as $event): ?>
                 <div class="event">
                     <!-- Link each event title to the event details page -->
-                    <a href="events_details.php?id=<?php echo $event['id']; ?>" class="event-title">
+                    <a href="volunteer_form.php?event_id=<?php echo $event['id']; ?>" class="event-title">
                         <?php echo htmlspecialchars($event['event_name']); ?>
                     </a>
                     <p class="event-date"><?php echo date("F j, Y", strtotime($event['event_date'])); ?></p>
                     <p class="event-description"><?php echo nl2br(htmlspecialchars($event['event_description'])); ?></p>
                     <p>Location: <?php echo htmlspecialchars($event['event_location']); ?></p>
                     <p>Status: <?php echo htmlspecialchars($event['status']); ?></p>
+                    
+                    <!-- Two buttons: "Volunteer for First Time" and "Volunteer Again" -->
+                    <a href="volunteer_form.php?event_id=<?php echo $event['id']; ?>" class="volunteer-btn">Volunteerrr for First Time</a>
+                    <a href="volunteer_form.php?event_id=<?php echo $event['id']; ?>" class="volunteer-btn">Volunteer Again</a>
                 </div>
             <?php endforeach; ?>
         <?php else: ?>
