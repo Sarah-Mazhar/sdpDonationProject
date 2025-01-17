@@ -3,6 +3,9 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
+// Start the session
+session_start();
+
 require_once __DIR__ . '/../config/Database.php';
 require_once __DIR__ . '/../facades/VolunteerFacade.php'; // Include the facade class
 
@@ -13,7 +16,13 @@ $conn = $database->getConnection();
 // Initialize the Facade
 $volunteerFacade = new VolunteerFacade($conn);
 
-$userId = 1; // Replace with the actual registered user ID
+// Use the logged-in user's ID from the session
+if (!isset($_SESSION['user_id'])) {
+    echo "<script>alert('User not logged in!');</script>";
+    exit;
+}
+
+$userId = $_SESSION['user_id']; // Fetch user ID dynamically from the session
 $eventId = isset($_GET['event_id']) ? intval($_GET['event_id']) : 0;
 
 try {
