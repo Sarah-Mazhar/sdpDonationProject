@@ -7,7 +7,7 @@ error_reporting(E_ALL);
 session_start();
 
 require_once __DIR__ . '/../config/Database.php';
-require_once __DIR__ . '/../facades/VolunteerFacade.php'; // Include the facade class
+require_once __DIR__ . '/../models/facades/VolunteerFacade.php'; // Include the facade class
 
 // Get database connection
 $database = Database::getInstance();
