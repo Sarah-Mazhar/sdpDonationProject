@@ -4,6 +4,7 @@
 $title = 'Donate Food';
 ob_start();
 ?>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 
 <div class="p-4 shadow rounded">
     <h2 class="text-center mb-4">Contribute Food to Those in Need</h2>
@@ -33,6 +34,26 @@ ob_start();
 
         <button type="submit" class="btn btn-primary btn-block mt-3">Donate Food</button>
     </form>
+
+    <!-- Button for printing receipt
+    <form method="post" action="index.php?action=print_receipt&type=food">
+        <button type="submit">Print Receipt</button>
+    </form> -->
+
+    <!-- <form method="get" action="index.php">
+    <input type="hidden" name="action" value="print_receipt">
+    <input type="hidden" name="type" value="food">
+    <button type="submit">Print Receipt</button>
+</form> -->
+
+<form method="get" action="index.php" class="mt-3">
+    <input type="hidden" name="action" value="print_receipt">
+    <input type="hidden" name="type" value="food">
+    <button type="submit" class="btn btn-success btn-block">
+        <i class="fas fa-print"></i> Print Food Receipt
+    </button>
+</form>
+
 </div>
 
 <?php

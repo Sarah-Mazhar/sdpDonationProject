@@ -2,13 +2,17 @@
 
 // models/MoneyDonation.php
 
+require_once __DIR__ . '/DonationTemplate.php'; // Template Pattern base class
 require_once __DIR__ . '/../../config/Database.php';
 require_once __DIR__ . '/../donation/DonationI.php';
 
+class MoneyDonation extends DonationTemplate implements DonationI {
 
-class MoneyDonation implements DonationI {
+    protected function initializeDonation($amountOrItem, $quantity) {
+        echo "Initializing a money donation of {$amountOrItem}.<br>";
+    }
 
-    public function donate($userId, $amount, $quantity=null) {
+    protected function processDonation($userId, $amountOrItem, $quantity) {
         // Create database connection
         $db = Database::getInstance()->getConnection();
 
@@ -18,12 +22,39 @@ class MoneyDonation implements DonationI {
 
         // Bind parameters and execute query
         $stmt->bindParam(':type', $type);
-        $stmt->bindParam(':amount', $amount);
+        $stmt->bindParam(':amount', $amountOrItem);
         $stmt->bindParam(':user_id', $userId);
-        
+
         $type = 'money'; // Donation type is money
 
         $stmt->execute(); // Execute the query to insert donation record
+
+        echo "Processed money donation of {$amountOrItem} for User ID {$userId}.<br>";
     }
+
+    protected function finalizeDonation() {
+        echo "Money donation finalized successfully.<br>";
+    }
+
+    public function donate($userId, $amount, $quantity = null) {
+        parent::donate($userId, $amount, $quantity); // Calls the template's donation method
+    }
+
+    // public function generateReceipt($userId, $amount, $paymentMethod) {
+    //     echo "Receipt: User {$userId} donated {$amount} via {$paymentMethod}.\n";
+    // }
+    
+
+    public function generateReceipt($userId, $amount, $paymentMethod) {
+        $receipt = "Receipt:\n";
+        $receipt .= "User ID: {$userId}\n";
+        $receipt .= "Amount Donated: {$amount}\n";
+        $receipt .= "Payment Method: {$paymentMethod}\n";
+        $receipt .= "Thank you for your generosity!\n";
+    
+        // Return the receipt for session storage or printing
+        return $receipt;
+    }
+    
 }
 ?>

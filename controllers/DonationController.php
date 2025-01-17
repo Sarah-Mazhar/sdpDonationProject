@@ -109,7 +109,7 @@ class DonationController {
         if ($result['status']) {
             $moneyDonation->donate($userId, $amount);
             $this->changeState(new CompletedState());
-            echo "Money donation of {$amount} processed successfully! {$result['message']}<br>";
+            echo "Money donation of {$amount} done successfully! {$result['message']}<br>";
 
             $this->donationSubject->notifyObservers([
                 'userId' => $userId,
@@ -117,10 +117,31 @@ class DonationController {
                 'type' => 'money',
                 'status' => 'success'
             ]);
-        } else {
-            $this->changeState(new FailedState());
-            echo "Money donation failed: {$result['message']}<br>";
-        }
+
+
+             // Generate Receipt and Store in Session
+            $receipt = $moneyDonation->generateReceipt($userId, $amount, $paymentMethod);
+            $_SESSION['money_receipt'] = $receipt;
+            } else {
+                $this->changeState(new FailedState());
+                echo "Money donation failed: {$result['message']}<br>";
+            }
+
+    //             // Print Receipt
+    //         $moneyDonation->generateReceipt($userId, $amount, $paymentMethod);
+    //     } else {
+    //         $this->changeState(new FailedState());
+    //         echo "Money donation failed: {$result['message']}<br>";
+    // }
+
+
+
+        // } else {
+        //     $this->changeState(new FailedState());
+        //     echo "Money donation failed: {$result['message']}<br>";
+        // }
+
+        
     }
 
     // Handle Food Donations with State Transitions
@@ -160,7 +181,7 @@ class DonationController {
         try {
             $foodDonation->donate($userId, $foodItem, $quantity);
             $this->changeState(new CompletedState());
-            echo "Food donation processed successfully!<br>";
+            echo "Food donation done successfully!<br>";
 
             $this->donationSubject->notifyObservers([
                 'userId' => $userId,
@@ -168,10 +189,29 @@ class DonationController {
                 'type' => 'food',
                 'status' => 'success'
             ]);
+
+
+            // Generate Receipt and Store in Session
+        $extrasText = !empty($extras) ? implode(', ', $extras) : 'None';
+        $receipt = $foodDonation->generateReceipt($userId, "{$quantity} {$foodItem}", $extrasText);
+        $_SESSION['food_receipt'] = $receipt;
         } catch (\Exception $e) {
             $this->changeState(new FailedState());
             echo "Error during food donation: " . $e->getMessage() . "<br>";
         }
+
+    //          // Generate Receipt
+    //         $extrasText = !empty($extras) ? implode(', ', $extras) : 'None';
+    //         $foodDonation->generateReceipt($userId, "{$quantity} {$foodItem}", $extrasText);
+    //     } catch (\Exception $e) {
+    //         $this->changeState(new FailedState());
+    //         echo "Error during food donation: " . $e->getMessage() . "<br>";
+    // }
+
+        // } catch (\Exception $e) {
+        //     $this->changeState(new FailedState());
+        //     echo "Error during food donation: " . $e->getMessage() . "<br>";
+        // }
     }
 
     // View Donations (Admin-only)

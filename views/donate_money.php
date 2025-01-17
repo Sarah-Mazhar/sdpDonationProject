@@ -2,7 +2,7 @@
 $title = 'Donate Money';
 ob_start();
 ?>
-
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 <div class="p-4 shadow rounded">
     <h2 class="text-center mb-4">Support Our Cause</h2>
     <p class="text-center mb-4">Your donation can make a difference. Please select an amount and payment method to proceed.</p>
@@ -23,6 +23,27 @@ ob_start();
 
         <button type="submit" class="btn btn-primary btn-block mt-3">Donate Now</button>
     </form>
+
+    <!-- Button for printing receipt
+    <form method="post" action="index.php?action=print_receipt&type=money">
+        <button type="submit">Print Receipt</button>
+    </form> -->
+<!-- 
+    <form method="get" action="index.php">
+    <input type="hidden" name="action" value="print_receipt">
+    <input type="hidden" name="type" value="money">
+    <button type="submit">Print Receipt</button>
+</form> -->
+
+
+<form method="get" action="index.php" class="mt-3">
+    <input type="hidden" name="action" value="print_receipt">
+    <input type="hidden" name="type" value="money">
+    <button type="submit" class="btn btn-success btn-block">
+        <i class="fas fa-print"></i> Print Money Receipt
+    </button>
+</form>
+
 </div>
 
 <?php
