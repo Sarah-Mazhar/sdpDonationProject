@@ -9,6 +9,7 @@ require_once '../models/commands/CommandManager.php';
 require_once '../models/Proxy/ProxyAdminAccess.php';
 require_once '../models/Proxy/RealAdmin.php';
 require_once '../controllers/PaymentController.php';
+require_once '../controllers/DonationController.php';
 
 session_start();
 
@@ -23,6 +24,7 @@ $db = Database::getInstance()->getConnection();
 $userModel = new User($db);
 $commandManager = new CommandManager();
 $userIterator = $userModel->getUsersForIterator();
+$donationController = new DonationController();
 
 // Handle Super Admin Functionality
 $groupedUsers = [];
@@ -52,6 +54,11 @@ if ($_SESSION['user_type'] === 'super_admin') {
         echo "<div style='color: red; text-align: center;'>{$e->getMessage()}</div>";
         exit;
     }
+}
+
+// Check if the user is a donation_admin and list all donations
+if ($_SESSION['user_type'] === 'donation_admin' || $_SESSION['user_type'] === 'super_admin') {
+    $allDonations = $donationController->listAllDonations();
 }
 
 // Handle Coordinator Functionality
@@ -139,7 +146,6 @@ if ($_SESSION['user_type'] === 'coordinator') {
 
         <?php if ($_SESSION['user_type'] === 'super_admin'): ?>
             <h3 class="text-center">Manage User Roles</h3>
-            <!-- Super Admin Role Management Form -->
             <form method="POST" class="form-group">
                 <div class="mb-3">
                     <label for="user_id" class="form-label">Select User:</label>
@@ -165,7 +171,6 @@ if ($_SESSION['user_type'] === 'coordinator') {
             </form>
 
             <h3 class="text-center mt-5">All Users</h3>
-            <!-- Super Admin Users Table -->
             <table class="table table-bordered mt-3">
                 <thead>
                     <tr>
@@ -188,7 +193,6 @@ if ($_SESSION['user_type'] === 'coordinator') {
             </table>
         <?php elseif ($_SESSION['user_type'] === 'coordinator'): ?>
             <h3>Add Beneficiary</h3>
-            <!-- Coordinator Add Beneficiary Form -->
             <form method="POST" class="form-group">
                 <div class="mb-3">
                     <label for="name" class="form-label">Beneficiary Name:</label>
@@ -213,7 +217,6 @@ if ($_SESSION['user_type'] === 'coordinator') {
             </div>
 
             <h3 class="mt-5">Beneficiaries</h3>
-            <!-- Coordinator Beneficiaries Table -->
             <table class="table table-bordered mt-3">
                 <thead>
                     <tr>
@@ -234,7 +237,6 @@ if ($_SESSION['user_type'] === 'coordinator') {
             </table>
 
             <h3>Donors</h3>
-            <!-- Coordinator Donors Table -->
             <table class="table table-bordered mt-3">
                 <thead>
                     <tr>
@@ -251,6 +253,46 @@ if ($_SESSION['user_type'] === 'coordinator') {
                     <?php endforeach; ?>
                 </tbody>
             </table>
+        <?php endif; ?>
+
+        <?php if ($_SESSION['user_type'] === 'donation_admin' || $_SESSION['user_type'] === 'super_admin'): ?>
+            <h3 class="text-center">All Donations</h3>
+            <table class="table table-bordered mt-3">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Food Item</th>
+                        <th>Quantity</th>
+                        <th>User ID</th>
+                        <th>Created At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($allDonations)): ?>
+                        <?php foreach ($allDonations as $donation): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($donation['id']) ?></td>
+                                <td><?= htmlspecialchars($donation['type']) ?></td>
+                                <td><?= htmlspecialchars($donation['amount'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($donation['food_item'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($donation['quantity'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($donation['user_id']) ?></td>
+                                <td><?= htmlspecialchars($donation['created_at']) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="7" class="text-center">No donations available.</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        <?php else: ?>
+            <div class="alert alert-danger text-center">
+                Access denied: You are not authorized to view this page.
+            </div>
         <?php endif; ?>
     </div>
 </body>

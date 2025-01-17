@@ -1,5 +1,6 @@
 <?php
 
+// Include required files
 require_once __DIR__ . '/../models/donation/DonationFactory.php';
 require_once __DIR__ . '/../models/donation/AddFruit.php';
 require_once __DIR__ . '/../models/donation/AddVegetables.php';
@@ -15,61 +16,46 @@ require_once __DIR__ . '/../models/observers/LogObserver.php';
 require_once __DIR__ . '/../models/donation/ProtectiveDonationProxy.php';
 require_once __DIR__ . '/../models/donation/DonationAdminInterface.php';
 require_once __DIR__ . '/../models/donation/RealDonationAdmin.php';
-
-// State-related includes
+require_once __DIR__ . '/../models/Iterator/DonationIterator.php';
 require_once __DIR__ . '/../models/donation/States/PendingState.php';
 require_once __DIR__ . '/../models/donation/States/ProcessingState.php';
 require_once __DIR__ . '/../models/donation/States/CompletedState.php';
 require_once __DIR__ . '/../models/donation/States/FailedState.php';
 
-// use Models\Donation\States\PendingState;
-// use Models\Donation\States\ProcessingState;
-// use Models\Donation\States\CompletedState;
-// use Models\Donation\States\FailedState;
-
-
 class DonationController {
-    private $donationSubject;
-    private $donationAdmin;
-    private $currentState; // Current state of the donation process
+    private $donationSubject; // Subject for managing observers
+    private $donationAdmin;  // Proxy for admin actions
+    private $currentState;   // Current state of the donation process
     private $stateHistory = []; // History of state transitions
 
     public function __construct() {
-        // Initialize the subject and attach observers
+        // Initialize donation subject and attach observers
         $this->donationSubject = new DonationSubject();
         $this->donationSubject->attach(new EmailObserver());
         $this->donationSubject->attach(new NotificationObserver());
         $this->donationSubject->attach(new LogObserver());
 
-        // Determine user role (fetch from session)
+        // Determine user role and initialize admin proxy
         $userRole = $_SESSION['user_role'] ?? 'guest';
-
-        // Initialize the proxy for donation administration
         $this->donationAdmin = new ProtectiveDonationProxy($userRole);
 
-        // Initialize the state to PendingState
+        // Set initial state to PendingState
         $this->changeState(new PendingState());
     }
 
-    // Change the state and notify observers
+    // Change the current state and record it
     private function changeState($newState) {
         $this->currentState = $newState;
-        $this->stateHistory[] = (new \ReflectionClass($newState))->getShortName(); // Save state name
+        $this->stateHistory[] = (new \ReflectionClass($newState))->getShortName();
         echo "State changed to: " . end($this->stateHistory) . "<br>";
-
-        // // Notify observers about the state change
-        // $this->donationSubject->notifyObservers([
-        //     'userId' => $_SESSION['user_id'] ?? 'Unknown User',
-        //     'state' => end($this->stateHistory),
-        // ]);
     }
 
-    // Get state history
+    // Get the history of state transitions
     public function getStateHistory() {
         return $this->stateHistory;
     }
 
-    // Handle Money Donations with State Transitions
+    // Handle money donations
     public function donateMoney($amount, $paymentMethod) {
         $userId = $_SESSION['user_id'] ?? null;
 
@@ -87,16 +73,15 @@ class DonationController {
         $donationFactory = new DonationFactory();
         $moneyDonation = $donationFactory->createDonation('money');
 
-        // Select the appropriate payment strategy
-        $paymentStrategy = null;
-        if ($paymentMethod === 'cash') {
-            $paymentStrategy = new CashPayment();
-        } elseif ($paymentMethod === 'visa') {
-            $paymentStrategy = new VisaPayment();
-        } elseif ($paymentMethod === 'third_party') {
-            $thirdPartyGateway = new ThirdPartyPaymentGateway();
-            $paymentStrategy = new ThirdPartyPaymentAdapter($thirdPartyGateway);
-        } else {
+        // Select payment strategy based on method
+        $paymentStrategy = match ($paymentMethod) {
+            'cash' => new CashPayment(),
+            'visa' => new VisaPayment(),
+            'third_party' => new ThirdPartyPaymentAdapter(new ThirdPartyPaymentGateway()),
+            default => null
+        };
+
+        if (!$paymentStrategy) {
             echo "Invalid payment method.";
             return;
         }
@@ -104,7 +89,7 @@ class DonationController {
         $paymentContext = new PaymentContext($paymentStrategy);
         $result = $paymentContext->executePayment($amount);
 
-        // State transitions based on payment success
+        // Handle state transitions
         $this->changeState(new ProcessingState());
         if ($result['status']) {
             $moneyDonation->donate($userId, $amount);
@@ -118,33 +103,15 @@ class DonationController {
                 'status' => 'success'
             ]);
 
-
-             // Generate Receipt and Store in Session
             $receipt = $moneyDonation->generateReceipt($userId, $amount, $paymentMethod);
             $_SESSION['money_receipt'] = $receipt;
-            } else {
-                $this->changeState(new FailedState());
-                echo "Money donation failed: {$result['message']}<br>";
-            }
-
-    //             // Print Receipt
-    //         $moneyDonation->generateReceipt($userId, $amount, $paymentMethod);
-    //     } else {
-    //         $this->changeState(new FailedState());
-    //         echo "Money donation failed: {$result['message']}<br>";
-    // }
-
-
-
-        // } else {
-        //     $this->changeState(new FailedState());
-        //     echo "Money donation failed: {$result['message']}<br>";
-        // }
-
-        
+        } else {
+            $this->changeState(new FailedState());
+            echo "Money donation failed: {$result['message']}<br>";
+        }
     }
 
-    // Handle Food Donations with State Transitions
+    // Handle food donations
     public function donateFood($foodItem, $quantity, $extras = []) {
         $userId = $_SESSION['user_id'] ?? null;
 
@@ -159,24 +126,19 @@ class DonationController {
             return;
         }
 
-        // Set amountOrItem in session for state notifications
-        $_SESSION['amountOrItem'] = "{$quantity} {$foodItem}";
-
         $donationFactory = new DonationFactory();
         $foodDonation = $donationFactory->createDonation('food');
         $foodDonation->addItem($foodItem, $quantity);
 
-        // Apply extras
+        // Apply extras if specified
         if (in_array('fruit', $extras)) {
-            $fruitDecorator = new AddFruit($foodDonation);
-            $fruitDecorator->addItemToDonation();
+            (new AddFruit($foodDonation))->addItemToDonation();
         }
         if (in_array('vegetables', $extras)) {
-            $vegetablesDecorator = new AddVegetables($foodDonation);
-            $vegetablesDecorator->addItemToDonation();
+            (new AddVegetables($foodDonation))->addItemToDonation();
         }
 
-        // State transitions
+        // Handle state transitions
         $this->changeState(new ProcessingState());
         try {
             $foodDonation->donate($userId, $foodItem, $quantity);
@@ -190,45 +152,49 @@ class DonationController {
                 'status' => 'success'
             ]);
 
-
-            // Generate Receipt and Store in Session
-        $extrasText = !empty($extras) ? implode(', ', $extras) : 'None';
-        $receipt = $foodDonation->generateReceipt($userId, "{$quantity} {$foodItem}", $extrasText);
-        $_SESSION['food_receipt'] = $receipt;
+            $extrasText = !empty($extras) ? implode(', ', $extras) : 'None';
+            $receipt = $foodDonation->generateReceipt($userId, "{$quantity} {$foodItem}", $extrasText);
+            $_SESSION['food_receipt'] = $receipt;
         } catch (\Exception $e) {
             $this->changeState(new FailedState());
             echo "Error during food donation: " . $e->getMessage() . "<br>";
         }
-
-    //          // Generate Receipt
-    //         $extrasText = !empty($extras) ? implode(', ', $extras) : 'None';
-    //         $foodDonation->generateReceipt($userId, "{$quantity} {$foodItem}", $extrasText);
-    //     } catch (\Exception $e) {
-    //         $this->changeState(new FailedState());
-    //         echo "Error during food donation: " . $e->getMessage() . "<br>";
-    // }
-
-        // } catch (\Exception $e) {
-        //     $this->changeState(new FailedState());
-        //     echo "Error during food donation: " . $e->getMessage() . "<br>";
-        // }
     }
 
-    // View Donations (Admin-only)
+    // Admin-only: View all donations
     public function viewDonations() {
-        if ($_SESSION['user_type'] === 'donation_admin' || $_SESSION['user_type'] === 'super_admin') {
+        if (in_array($_SESSION['user_type'], ['donation_admin', 'super_admin'])) {
             $this->donationAdmin->viewDonations();
         } else {
             echo "Access denied: You are not authorized to view donations.";
         }
     }
 
-    // Delete a Donation (Admin-only)
+    // Admin-only: Delete a donation
     public function deleteDonation($donationId) {
-        if ($_SESSION['user_type'] === 'donation_admin' || $_SESSION['user_type'] === 'super_admin') {
+        if (in_array($_SESSION['user_type'], ['donation_admin', 'super_admin'])) {
             $this->donationAdmin->deleteDonation($donationId);
         } else {
             echo "Access denied: You are not authorized to delete donations.";
+        }
+    }
+
+    // Admin-only: List all donations using an iterator
+    public function listAllDonations() {
+        if (in_array($_SESSION['user_type'], ['donation_admin', 'super_admin'])) {
+            $db = Database::getInstance()->getConnection();
+            $stmt = $db->query("SELECT * FROM donations");
+            $donations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $donationIterator = new DonationIterator($donations);
+            $donationsList = [];
+            while ($donationIterator->hasNext()) {
+                $donationsList[] = $donationIterator->next();
+            }
+            return $donationsList;
+        } else {
+            echo "Access denied: You are not authorized to view donations.";
+            return [];
         }
     }
 }
