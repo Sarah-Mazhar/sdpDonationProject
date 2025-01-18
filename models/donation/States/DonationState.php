@@ -1,11 +1,6 @@
 <?php
-// namespace Models\Donation\States;
 
-// use Controllers\DonationController;
-// require_once __DIR__ . '/../../../../controllers/DonationController.php';
 require_once __DIR__ . '/../../../controllers/DonationController.php';
-
-
 
 interface DonationState {
     public function process(DonationController $context);

@@ -9,14 +9,13 @@ class EventController {
     }
 
     public function displayEventsPage() {
-        // Fetch months for the dropdown menu
         $months = $this->eventModel->getAllMonths();
-        require_once '../views/events.php';  // This will be the view file for rendering
+        require_once '../views/events.php';
     }
 
     public function displayEventsByMonth($month) {
         $events = $this->eventModel->getEventsByMonth($month);
-        require_once '../views/events.php';  // This will be the same view, just filtered
+        require_once '../views/events.php';
     }
 }
 ?>

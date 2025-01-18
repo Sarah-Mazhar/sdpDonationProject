@@ -1,5 +1,4 @@
 <?php
-// Enable error reporting
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
@@ -8,7 +7,6 @@ require_once __DIR__ . '/../config/Database.php';
 $database = Database::getInstance();
 $conn = $database->getConnection();
 
-// Get event ID from query parameter
 $eventId = isset($_GET['id']) ? $_GET['id'] : null;
 
 if (!$eventId) {
@@ -16,19 +14,16 @@ if (!$eventId) {
     die();
 }
 
-// Fetch event details
 $query = "SELECT * FROM events WHERE id = :id";
 $stmt = $conn->prepare($query);
 $stmt->bindParam(':id', $eventId);
 $stmt->execute();
 
-// Check for any SQL errors
 if ($stmt->errorCode() != '00000') {
     var_dump($stmt->errorInfo());
     die();
 }
 
-// Fetch the event
 $event = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if ($event):
@@ -41,7 +36,6 @@ if ($event):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Event Details</title>
     <style>
-        /* General styling */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f7fc;
@@ -141,7 +135,6 @@ if ($event):
                 <label for="event_description">Event Description:</label>
                 <textarea id="event_description" name="event_description" rows="5" required><?php echo htmlspecialchars($event['event_description']); ?></textarea>
 
-                <!-- Save Changes Button -->
                 <button type="submit" name="save_event">Save Changes</button>
             </form>
         </div>

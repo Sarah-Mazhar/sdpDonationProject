@@ -8,19 +8,17 @@ class User {
     private $id;
     private $type;
 
-    // Constructor to initialize either a database connection or user properties
     public function __construct($db = null, $id = null, $type = null) {
         if ($db !== null) {
-            $this->conn = $db; // Set database connection
+            $this->conn = $db; 
         }
 
         if ($id !== null && $type !== null) {
-            $this->id = $id; // Set user ID
-            $this->type = $type; // Set user type
+            $this->id = $id;
+            $this->type = $type;
         }
     }
 
-    // Method to create a new user
     public function createUser($email, $password, $mobile) {
         $sql = "INSERT INTO " . $this->table . " (email, password, mobile) VALUES (:email, :password, :mobile)";
         $stmt = $this->conn->prepare($sql);
@@ -34,7 +32,6 @@ class User {
         return $stmt->execute();
     }
 
-    // Method to get user by email
     public function getUserByEmail($email) {
         $sql = "SELECT * FROM " . $this->table . " WHERE email = :email";
         $stmt = $this->conn->prepare($sql);
@@ -45,18 +42,14 @@ class User {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Method to get user by mobile
     public function getUserByMobile($mobile) {
         $sql = "SELECT * FROM " . $this->table . " WHERE mobile = :mobile";
         $stmt = $this->conn->prepare($sql);
-
         $stmt->bindParam(':mobile', $mobile);
         $stmt->execute();
-
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Method to get users grouped by type
     public function getUsersGroupedByType($includeSuperAdmin = false) {
         $condition = $includeSuperAdmin ? "" : "WHERE type != 'super_admin'";
         $sql = "
@@ -78,20 +71,15 @@ class User {
         return $groupedUsers;
     }
 
-    // Method to update a user's role
     public function updateUserRole($userId, $newRole) {
-        // Check if role is valid
-        $validRoles = ['user', 'donation_admin', 'payment_admin', 'super_admin', 'coordinator'];
         if (!in_array($newRole, $validRoles)) {
-            return false; // Invalid role
+            return false;
         }
 
         $sql = "UPDATE " . $this->table . " SET type = :type WHERE id = :id";
         $stmt = $this->conn->prepare($sql);
-
         $stmt->bindParam(':type', $newRole);
         $stmt->bindParam(':id', $userId);
-
         return $stmt->execute();
     }
 
@@ -104,12 +92,10 @@ class User {
         return new UserIterator($users);
     }
     
-    // Get user type
     public function getType() {
         return $this->type;
     }
 
-    // Get user ID
     public function getId() {
         return $this->id;
     }

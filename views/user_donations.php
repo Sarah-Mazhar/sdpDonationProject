@@ -1,34 +1,27 @@
 <?php
-// Enable error reporting for debugging
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Start the session
 session_start();
 
 require_once __DIR__ . '/../config/Database.php';
-require_once __DIR__ . '/../models/facades/DonationFacade.php'; // Include the new facade class
+require_once __DIR__ . '/../models/facades/DonationFacade.php';
 
-// Get database connection
 $database = Database::getInstance();
 $conn = $database->getConnection();
 
-// Initialize the Facade
 $donationFacade = new DonationFacade($conn);
 
-// Use the logged-in user's ID from the session
 if (!isset($_SESSION['user_id'])) {
     echo "<script>alert('User not logged in!');</script>";
     exit;
 }
 
-$userId = $_SESSION['user_id']; // Fetch user ID dynamically from the session
+$userId = $_SESSION['user_id'];
 
 try {
-    // Fetch user donations through the facade
     $donations = $donationFacade->getDonationsByUser($userId);
 } catch (PDOException $e) {
-    // Handle database error
     error_log("Database error: " . $e->getMessage());
     echo "<script>alert('Database error: " . $e->getMessage() . "');</script>";
     $donations = [];

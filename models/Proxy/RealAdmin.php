@@ -1,5 +1,4 @@
 <?php
-// models/Proxy/RealAdmin.php
 
 require_once 'AdminInterface.php';
 

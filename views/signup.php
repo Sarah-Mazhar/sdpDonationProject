@@ -1,4 +1,3 @@
-<!-- views/signup.php -->
 
 <?php
 $title = 'Sign Up';

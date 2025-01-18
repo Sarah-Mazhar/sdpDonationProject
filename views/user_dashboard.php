@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-// Redirect to login if not logged in or if type is not 'user'
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'user') {
     header("Location: login.php");
     exit();
@@ -15,12 +14,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
 
 require_once __DIR__ . '/../config/Database.php';
 
-// Get database connection
 $database = Database::getInstance();
 $conn = $database->getConnection();
 
-// Fetch the user's email dynamically from the `users` table
-$userEmail = "User"; // Default fallback
+$userEmail = "User";
 if (isset($_SESSION['user_id'])) {
     $userId = $_SESSION['user_id'];
     $query = "SELECT email FROM users WHERE id = :id";

@@ -1,5 +1,4 @@
 <?php
-// models/Subject.php
 
 interface Subject {
     public function attach($observer);

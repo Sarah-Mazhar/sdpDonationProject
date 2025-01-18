@@ -1,5 +1,3 @@
-<!-- views/donate_food.php -->
-
 <?php
 $title = 'Donate Food';
 ob_start();

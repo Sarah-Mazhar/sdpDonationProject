@@ -1,5 +1,4 @@
 <?php
-// models/donation/FoodDonationDecorator.php
 
 require_once 'FoodDonation.php';
 

@@ -1,5 +1,4 @@
 <?php
-// models/Proxy/ProxyAdminAccess.php
 
 require_once 'AdminInterface.php';
 require_once 'RealAdmin.php';

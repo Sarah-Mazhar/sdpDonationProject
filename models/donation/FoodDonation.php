@@ -1,12 +1,11 @@
 <?php
-// models/donation/FoodDonation.php
 
 require_once __DIR__ . '/../../config/Database.php';
 require_once __DIR__ . '/DonationI.php';
-require_once __DIR__ . '/DonationTemplate.php'; // Include the Template class
+require_once __DIR__ . '/DonationTemplate.php'; 
 
 class FoodDonation extends DonationTemplate implements DonationI {
-    private $items = []; // Start with an empty box
+    private $items = [];
 
     public function addItem($item, $quantity) {
         $this->items[] = ["item" => $item, "quantity" => $quantity];

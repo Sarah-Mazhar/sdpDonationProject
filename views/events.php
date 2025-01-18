@@ -1,12 +1,9 @@
 <?php
-// views/view_events.php
 
-// Database connection and query fetching
 require_once __DIR__ . '/../config/Database.php';
 $database = Database::getInstance();
 $conn = $database->getConnection();
 
-// Fetch all events ordered by ID
 $query = "SELECT * FROM events ORDER BY id ASC";
 $stmt = $conn->prepare($query);
 $stmt->execute();
@@ -20,7 +17,6 @@ $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>All Events</title>
     <style>
-        /* Basic styling for the events page */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f9;
@@ -100,7 +96,6 @@ $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <?php if (!empty($events)) : ?>
             <?php foreach ($events as $event) : ?>
                 <div class="event">
-                    <!-- Link each event title to the event details page -->
                     <a href="events_details.php?id=<?php echo $event['id']; ?>" class="event-title">
                         <?php echo htmlspecialchars($event['event_name']); ?>
                     </a>

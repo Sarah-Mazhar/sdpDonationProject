@@ -1,4 +1,3 @@
-<!-- views/login_email.php -->
 
 <?php
 $title = 'Login with Email';

@@ -1,5 +1,4 @@
 <?php
-// context/LoginContext.php
 
 require_once __DIR__ . '/../strategies/EmailAuthStrategy.php';
 require_once __DIR__ . '/../strategies/MobileAuthStrategy.php';

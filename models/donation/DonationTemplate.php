@@ -1,7 +1,5 @@
 <?php
 
-// models/donation/DonationTemplate.php
-
 abstract class DonationTemplate {
     public function donate($userId, $amountOrItem, $quantity = null) {
         $this->validateUser($userId);

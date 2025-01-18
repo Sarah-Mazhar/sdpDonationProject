@@ -1,5 +1,4 @@
 <?php
-// models/donation/DonationSubject.php
 
 require_once __DIR__ . '/../Subject.php';
 
@@ -18,7 +17,6 @@ class DonationSubject implements Subject {
     }
 
     public function notifyObservers($data) {
-        // Ensure the 'amountOrItem' key exists in the $data array
         $data['amountOrItem'] = $data['amountOrItem'] ?? 'undefined';
 
         foreach ($this->observers as $observer) {

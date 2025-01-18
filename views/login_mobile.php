@@ -1,4 +1,3 @@
-<!-- views/login_mobile.php -->
 
 <?php
 $title = 'Login with Mobile';

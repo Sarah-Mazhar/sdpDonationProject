@@ -1,6 +1,4 @@
 <?php
-
-// Include required files
 require_once __DIR__ . '/../models/donation/DonationFactory.php';
 require_once __DIR__ . '/../models/donation/AddFruit.php';
 require_once __DIR__ . '/../models/donation/AddVegetables.php';
@@ -23,39 +21,33 @@ require_once __DIR__ . '/../models/donation/States/CompletedState.php';
 require_once __DIR__ . '/../models/donation/States/FailedState.php';
 
 class DonationController {
-    private $donationSubject; // Subject for managing observers
-    private $donationAdmin;  // Proxy for admin actions
-    private $currentState;   // Current state of the donation process
-    private $stateHistory = []; // History of state transitions
+    private $donationSubject; 
+    private $donationAdmin; 
+    private $currentState;  
+    private $stateHistory = [];
 
     public function __construct() {
-        // Initialize donation subject and attach observers
         $this->donationSubject = new DonationSubject();
         $this->donationSubject->attach(new EmailObserver());
         $this->donationSubject->attach(new NotificationObserver());
         $this->donationSubject->attach(new LogObserver());
 
-        // Determine user role and initialize admin proxy
         $userRole = $_SESSION['user_role'] ?? 'guest';
         $this->donationAdmin = new ProtectiveDonationProxy($userRole);
 
-        // Set initial state to PendingState
         $this->changeState(new PendingState());
     }
 
-    // Change the current state and record it
     private function changeState($newState) {
         $this->currentState = $newState;
         $this->stateHistory[] = (new \ReflectionClass($newState))->getShortName();
         echo "State changed to: " . end($this->stateHistory) . "<br>";
     }
 
-    // Get the history of state transitions
     public function getStateHistory() {
         return $this->stateHistory;
     }
 
-    // Handle money donations
     public function donateMoney($amount, $paymentMethod) {
         $userId = $_SESSION['user_id'] ?? null;
 
@@ -73,7 +65,6 @@ class DonationController {
         $donationFactory = new DonationFactory();
         $moneyDonation = $donationFactory->createDonation('money');
 
-        // Select payment strategy based on method
         $paymentStrategy = match ($paymentMethod) {
             'cash' => new CashPayment(),
             'visa' => new VisaPayment(),
@@ -89,7 +80,6 @@ class DonationController {
         $paymentContext = new PaymentContext($paymentStrategy);
         $result = $paymentContext->executePayment($amount);
 
-        // Handle state transitions
         $this->changeState(new ProcessingState());
         if ($result['status']) {
             $moneyDonation->donate($userId, $amount);
@@ -111,7 +101,6 @@ class DonationController {
         }
     }
 
-    // Handle food donations
     public function donateFood($foodItem, $quantity, $extras = []) {
         $userId = $_SESSION['user_id'] ?? null;
 
@@ -130,7 +119,6 @@ class DonationController {
         $foodDonation = $donationFactory->createDonation('food');
         $foodDonation->addItem($foodItem, $quantity);
 
-        // Apply extras if specified
         if (in_array('fruit', $extras)) {
             (new AddFruit($foodDonation))->addItemToDonation();
         }
@@ -138,7 +126,6 @@ class DonationController {
             (new AddVegetables($foodDonation))->addItemToDonation();
         }
 
-        // Handle state transitions
         $this->changeState(new ProcessingState());
         try {
             $foodDonation->donate($userId, $foodItem, $quantity);
@@ -161,7 +148,6 @@ class DonationController {
         }
     }
 
-    // Admin-only: View all donations
     public function viewDonations() {
         if (in_array($_SESSION['user_type'], ['donation_admin', 'super_admin'])) {
             $this->donationAdmin->viewDonations();
@@ -170,7 +156,6 @@ class DonationController {
         }
     }
 
-    // Admin-only: Delete a donation
     public function deleteDonation($donationId) {
         if (in_array($_SESSION['user_type'], ['donation_admin', 'super_admin'])) {
             $this->donationAdmin->deleteDonation($donationId);
@@ -179,7 +164,6 @@ class DonationController {
         }
     }
 
-    // Admin-only: List all donations using an iterator
     public function listAllDonations() {
         if (in_array($_SESSION['user_type'], ['donation_admin', 'super_admin'])) {
             $db = Database::getInstance()->getConnection();

@@ -1,13 +1,7 @@
 <?php
-// namespace Models\Donation\States;
 
-// use Controllers\DonationController;
-
-// Include the DonationState interface
 require_once __DIR__ . '/DonationState.php';
-// require_once __DIR__ . '/../../../../controllers/DonationController.php';
 require_once __DIR__ . '/../../../controllers/DonationController.php';
-
 
 class PendingState implements DonationState {
 

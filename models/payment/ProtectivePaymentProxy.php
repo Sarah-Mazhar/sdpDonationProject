@@ -8,7 +8,7 @@ class ProtectivePaymentProxy implements PaymentAdminInterface {
 
     public function __construct($userType) {
         $this->userType = $userType;
-        $this->realPaymentAdmin = new RealPaymentAdmin(); // Initialize the realPaymentAdmin instance
+        $this->realPaymentAdmin = new RealPaymentAdmin();
     }
 
     public function viewPayments() {
@@ -30,7 +30,6 @@ class ProtectivePaymentProxy implements PaymentAdminInterface {
     public function addPayment($amount, $method): void {
         if ($this->userType === 'payment_admin' || $this->userType === 'super_admin') {
             echo "Adding payment of $amount via $method.";
-            // Add your implementation here
         } else {
             echo "Access denied: Insufficient permissions.";
         }
@@ -39,7 +38,6 @@ class ProtectivePaymentProxy implements PaymentAdminInterface {
     public function deletePayment($paymentId): void {
         if ($this->userType === 'payment_admin' || $this->userType === 'super_admin') {
             echo "Deleting payment ID $paymentId.";
-            // Add your implementation here
         } else {
             echo "Access denied: Insufficient permissions.";
         }

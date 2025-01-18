@@ -1,5 +1,4 @@
 <?php
-// strategies/MobileAuthStrategy.php
 
 require_once 'AuthStrategy.php';
 require_once __DIR__ . '/../User.php';

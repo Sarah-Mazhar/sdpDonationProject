@@ -1,21 +1,17 @@
 <?php
 session_start();
 
-// Enable error reporting for debugging (remove in production)
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Include required files
 require_once __DIR__ . '/config/Database.php';
 require_once __DIR__ . '/controllers/AuthController.php';
 require_once __DIR__ . '/controllers/DonationController.php';
 
-// Initialize controllers
 $authController = new AuthController();
 $donationController = new DonationController();
 
-// Ensure the database connection is established
 try {
     $database = Database::getInstance();
     $db = $database->getConnection();
@@ -23,13 +19,11 @@ try {
     die("Database connection failed: " . $e->getMessage());
 }
 
-// Helper function to handle invalid input
 function invalidInput($message = "Invalid input.") {
     echo $message;
     exit;
 }
 
-// Handle GET requests
 function handleGetRequest($action) {
     global $authController, $donationController;
 
@@ -59,7 +53,6 @@ function handleGetRequest($action) {
     }
 }
 
-// Handle POST requests
 function handlePostRequest($action) {
     global $authController, $donationController;
 
@@ -89,7 +82,6 @@ function handlePostRequest($action) {
     }
 }
 
-// GET Handlers
 function handleLoginView() {
     if (isset($_GET['login_type'])) {
         if ($_GET['login_type'] === 'email') {
@@ -168,7 +160,6 @@ function showBeneficiaries() {
     }
 }
 
-// POST Handlers
 function handleLogin() {
     global $authController;
 
@@ -234,7 +225,6 @@ function handleDonation() {
     }
 }
 
-// Main entry point
 $action = $_GET['action'] ?? null;
 $method = $_SERVER['REQUEST_METHOD'];
 

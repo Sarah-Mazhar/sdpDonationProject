@@ -13,20 +13,17 @@ require_once '../controllers/DonationController.php';
 
 session_start();
 
-// Ensure User Is Logged In
 if (!isset($_SESSION['user_type'])) {
     echo "Access denied.";
     exit;
 }
 
-// Database Connection
 $db = Database::getInstance()->getConnection();
 $userModel = new User($db);
 $commandManager = new CommandManager();
 $userIterator = $userModel->getUsersForIterator();
 $donationController = new DonationController();
 
-// Handle Super Admin Functionality
 $groupedUsers = [];
 if ($_SESSION['user_type'] === 'super_admin') {
     try {
@@ -56,12 +53,10 @@ if ($_SESSION['user_type'] === 'super_admin') {
     }
 }
 
-// Handle Donation Admin Functionality
 if ($_SESSION['user_type'] === 'donation_admin' || $_SESSION['user_type'] === 'super_admin') {
     $allDonations = $donationController->listAllDonations();
 }
 
-// Handle Coordinator Functionality
 if ($_SESSION['user_type'] === 'coordinator') {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_POST['add_beneficiary'])) {
@@ -191,6 +186,85 @@ if ($_SESSION['user_type'] === 'coordinator') {
                     <?php endwhile; ?>
                 </tbody>
             </table>
+        
+        <?php elseif ($_SESSION['user_type'] === 'payment_admin'): ?>
+        <div class="container py-4">
+            <h2 class="text-center text-primary mb-4">Payment Management Dashboard 🗓️</h2>
+            <div class="card shadow-sm mb-5">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Money Donations</h5>
+                </div>
+                <div class="card-body">
+                    <?php
+                    $paymentController = new PaymentController();
+                    $moneyDonations = $paymentController->viewPayments();
+                    ?>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Amount</th>
+                                    <th scope="col">User Email</th>
+                                    <th scope="col">Created At</th>
+                                    <th scope="col" class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($moneyDonations as $donation): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($donation['id']) ?></td>
+                                        <td>$<?= number_format(htmlspecialchars($donation['amount']), 2) ?></td>
+                                        <td><?= htmlspecialchars($donation['user_email']) ?></td>
+                                        <td><?= htmlspecialchars($donation['created_at']) ?></td>
+                                        <td class="text-center">
+                                            <form method="POST" action="/DonationProjecttt/index.php?action=delete_payment" style="display: inline;">
+                                                <input type="hidden" name="payment_id" value="<?= htmlspecialchars($donation['id']) ?>">
+                                                <button type="submit" class="btn btn-danger btn-sm">
+                                                    <i class="bi bi-trash"></i> Delete 🗑️
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                                <?php if (empty($moneyDonations)): ?>
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">No donations found.</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+                    <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Add a Money Donation 💵</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/DonationProjecttt/index.php?action=add_payment">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="amount" class="form-label">Amount:</label>
+                                <input type="number" step="0.01" id="amount" name="amount" class="form-control" placeholder="Enter donation amount" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="method" class="form-label">Payment Method:</label>
+                                <select id="method" name="method" class="form-select" required>
+                                    <option value="cash">Cash</option>
+                                    <option value="visa">Visa</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-plus-circle"></i> Add Payment ✔️
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
         <?php elseif ($_SESSION['user_type'] === 'coordinator'): ?>
             <h3>Add Beneficiary</h3>
             <form method="POST" class="form-group">
@@ -290,10 +364,8 @@ if ($_SESSION['user_type'] === 'coordinator') {
                 </tbody>
             </table>
         <?php else: ?>
-            <div class="alert alert-danger text-center">
-                Access denied: You are not authorized to view this page.
-            </div>
         <?php endif; ?>
     </div>
 </body>
 </html>
+
